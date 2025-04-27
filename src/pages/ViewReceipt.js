@@ -6,6 +6,7 @@ import jsPDF from 'jspdf';
 import { useAuth } from '../contexts/AuthContext';
 import MainNavbar from '../components/Navbar';
 import { getReceiptById, formatCurrency, formatDate, formatTime } from '../utils/receiptUtils';
+import './ViewReceipt.css';
 
 const ViewReceipt = () => {
   const { id } = useParams();
@@ -135,13 +136,12 @@ const ViewReceipt = () => {
     <>
       <MainNavbar />
       <Container>
-        <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="d-flex justify-content-between align-items-center mb-4 receipt-header">
           <h2>Receipt Details</h2>
-          <div>
+          <div className="receipt-buttons">
             <Button 
               variant="primary" 
               onClick={downloadPdf} 
-              className="me-2"
             >
               Download PDF
             </Button>
@@ -149,7 +149,6 @@ const ViewReceipt = () => {
             <Button 
               variant="success" 
               onClick={printReceipt} 
-              className="me-2"
             >
               Print Receipt
             </Button>
@@ -157,7 +156,6 @@ const ViewReceipt = () => {
             <Button 
               variant="info" 
               onClick={() => setShowSizeControls(!showSizeControls)} 
-              className="me-2"
             >
               {showSizeControls ? 'Hide Size Controls' : 'Adjust Size'}
             </Button>
@@ -174,10 +172,10 @@ const ViewReceipt = () => {
         {showSizeControls && (
           <Card className="mb-3">
             <Card.Body>
-              <Form>
+              <Form className="size-controls-form">
                 <Form.Group as={Row} className="align-items-center">
-                  <Form.Label column sm={3}>Receipt Width (%): {receiptWidth}%</Form.Label>
-                  <Col sm={7}>
+                  <Form.Label column xs={12} sm={3}>Receipt Width (%): {receiptWidth}%</Form.Label>
+                  <Col xs={12} sm={7} className="mb-2 mb-sm-0">
                     <Form.Range 
                       value={receiptWidth}
                       onChange={handleWidthChange}
@@ -186,7 +184,7 @@ const ViewReceipt = () => {
                       step={5}
                     />
                   </Col>
-                  <Col sm={2}>
+                  <Col xs={12} sm={2} className="d-flex justify-content-start justify-content-sm-end">
                     <Button 
                       variant="outline-secondary" 
                       size="sm"
@@ -212,12 +210,12 @@ const ViewReceipt = () => {
                 </div>
                 
                 <Row className="mb-3">
-                  <Col sm={6}>
+                  <Col xs={12} sm={6}>
                     <p className="mb-1"><strong>Receipt #:</strong> {receipt.transactionId}</p>
                     <p className="mb-1"><strong>Date:</strong> {formatDate(receipt.timestamp)}</p>
                     <p className="mb-1"><strong>Time:</strong> {formatTime(receipt.timestamp)}</p>
                   </Col>
-                  <Col sm={6}>
+                  <Col xs={12} sm={6}>
                     <p className="mb-1"><strong>Cashier:</strong> {receipt.cashierName}</p>
                     <p className="mb-1"><strong>Manager:</strong> {receipt.managerName || 'N/A'}</p>
                     <p className="mb-1"><strong>Payment Method:</strong> {receipt.paymentMethod}</p>
@@ -226,32 +224,34 @@ const ViewReceipt = () => {
                 
                 <hr />
                 
-                <Table borderless className="receipt-table">
-                  <thead>
-                    <tr>
-                      <th>Item</th>
-                      <th className="text-end">Price</th>
-                      <th className="text-center">Qty</th>
-                      <th className="text-end">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {receipt.items.map((item, index) => (
-                      <tr key={index}>
-                        <td>{item.name}</td>
-                        <td className="text-end">{formatCurrency(item.price)}</td>
-                        <td className="text-center">{item.quantity}</td>
-                        <td className="text-end">{formatCurrency(parseFloat(item.price) * parseInt(item.quantity))}</td>
+                <div className="table-responsive">
+                  <Table borderless className="receipt-table">
+                    <thead>
+                      <tr>
+                        <th>Item</th>
+                        <th className="text-end">Price</th>
+                        <th className="text-center">Qty</th>
+                        <th className="text-end">Total</th>
                       </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <th colSpan="3" className="text-end">Total:</th>
-                      <th className="text-end">{formatCurrency(receipt.totalAmount)}</th>
-                    </tr>
-                  </tfoot>
-                </Table>
+                    </thead>
+                    <tbody>
+                      {receipt.items.map((item, index) => (
+                        <tr key={index}>
+                          <td>{item.name}</td>
+                          <td className="text-end">{formatCurrency(item.price)}</td>
+                          <td className="text-center">{item.quantity}</td>
+                          <td className="text-end">{formatCurrency(parseFloat(item.price) * parseInt(item.quantity))}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <th colSpan="3" className="text-end">Total:</th>
+                        <th className="text-end">{formatCurrency(receipt.totalAmount)}</th>
+                      </tr>
+                    </tfoot>
+                  </Table>
+                </div>
                 
                 <hr />
                 
