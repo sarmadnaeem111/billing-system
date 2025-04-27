@@ -1,0 +1,100 @@
+/* Responsive styles for Mark Attendance page */
+
+/* Base styles */
+.mark-attendance-table {
+  width: 100%;
+  margin-bottom: 1rem;
+  border-collapse: collapse;
+}
+
+.mark-attendance-table th {
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.mark-attendance-table td {
+  vertical-align: middle;
+  padding: 0.5rem;
+}
+
+/* Container for the responsive table */
+.mark-attendance-table-container {
+  overflow-x: auto;
+}
+
+/* Mobile responsive styles */
+@media screen and (max-width: 767px) {
+  .mark-attendance-table {
+    border: 0;
+  }
+  
+  .mark-attendance-table thead {
+    border: none;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+  }
+  
+  .mark-attendance-table tr {
+    border-bottom: 3px solid #ddd;
+    display: block;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-radius: 4px;
+    padding: 0.75rem 0;
+    background-color: #fff;
+  }
+  
+  .mark-attendance-table tr:nth-of-type(even) {
+    background-color: #f8f9fa;
+  }
+  
+  .mark-attendance-table td {
+    border-bottom: 1px solid #ddd;
+    display: block;
+    font-size: 0.9rem;
+    text-align: right;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .mark-attendance-table td::before {
+    content: attr(data-label);
+    float: left;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+  }
+  
+  .mark-attendance-table td:last-child {
+    border-bottom: 0;
+  }
+  
+  /* Form controls on mobile */
+  .mark-attendance-table select,
+  .mark-attendance-table input {
+    width: 100%;
+    max-width: 100%;
+    display: inline-block;
+  }
+  
+  /* Button container for mobile */
+  .attendance-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .attendance-actions button {
+    width: 100%;
+  }
+  
+  @media screen and (max-width: 576px) {
+    .attendance-date-picker {
+      width: 100%;
+    }
+  }
+} 
