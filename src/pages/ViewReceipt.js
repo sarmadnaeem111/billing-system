@@ -62,6 +62,23 @@ const ViewReceipt = () => {
       });
   };
 
+  // Function to print the receipt
+  const printReceipt = () => {
+    const content = pdfRef.current;
+    const originalContents = document.body.innerHTML;
+    
+    const printContent = document.createElement('div');
+    printContent.innerHTML = content.innerHTML;
+    printContent.style.width = '100%';
+    
+    document.body.innerHTML = printContent.innerHTML;
+    
+    window.print();
+    
+    document.body.innerHTML = originalContents;
+    window.location.reload(); // Reload to restore the React app state
+  };
+
   if (loading) {
     return (
       <>
@@ -120,6 +137,14 @@ const ViewReceipt = () => {
               className="me-2"
             >
               Download PDF
+            </Button>
+            
+            <Button 
+              variant="success" 
+              onClick={printReceipt} 
+              className="me-2"
+            >
+              Print Receipt
             </Button>
             
             <Button 
