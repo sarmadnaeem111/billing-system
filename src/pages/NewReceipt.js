@@ -3,6 +3,7 @@ import { Container, Form, Button, Row, Col, Card, Table, Alert } from 'react-boo
 import { useNavigate } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import BarcodeReader from 'react-barcode-reader';
 import { useAuth } from '../contexts/AuthContext';
 import MainNavbar from '../components/Navbar';
 import { calculateTotal, generateTransactionId, saveReceipt } from '../utils/receiptUtils';
@@ -21,6 +22,7 @@ const NewReceipt = () => {
   const [savedReceiptId, setSavedReceiptId] = useState(null);
   const [stockItems, setStockItems] = useState([]);
   const [stockLoaded, setStockLoaded] = useState(false);
+  const [scanSuccess, setScanSuccess] = useState('');
   const pdfRef = useRef();
   const navigate = useNavigate();
 
@@ -37,6 +39,55 @@ const NewReceipt = () => {
         });
     }
   }, [currentUser]);
+
+  // Handle successful barcode scan
+  const handleScan = (data) => {
+    if (!data) return;
+    
+    setScanSuccess(`Scanned: ${data}`);
+    
+    // Clear scan success message after 3 seconds
+    setTimeout(() => setScanSuccess(''), 3000);
+    
+    // Find item in inventory by SKU/barcode
+    if (stockLoaded) {
+      const matchingItem = stockItems.find(item => 
+        item.sku && item.sku.toLowerCase() === data.toLowerCase());
+      
+      if (matchingItem) {
+        // Check if item already exists in the receipt
+        const existingItemIndex = items.findIndex(item => 
+          item.name.toLowerCase() === matchingItem.name.toLowerCase());
+        
+        if (existingItemIndex >= 0) {
+          // Increment quantity if item already exists
+          const newItems = [...items];
+          const currentQty = parseInt(newItems[existingItemIndex].quantity) || 0;
+          newItems[existingItemIndex].quantity = (currentQty + 1).toString();
+          setItems(newItems);
+        } else {
+          // Add as new item
+          setItems([...items, { 
+            name: matchingItem.name, 
+            price: matchingItem.price.toString(), 
+            quantity: '1' 
+          }]);
+        }
+      } else {
+        setError(`Item with barcode ${data} not found in inventory`);
+        // Clear error after 3 seconds
+        setTimeout(() => setError(''), 3000);
+      }
+    }
+  };
+
+  // Handle barcode scanning error
+  const handleScanError = (err) => {
+    console.error('Barcode scanning error:', err);
+    setError('Error scanning barcode. Please try again.');
+    // Clear error after 3 seconds
+    setTimeout(() => setError(''), 3000);
+  };
 
   // Handle item input change
   const handleItemChange = (index, field, value) => {
@@ -221,6 +272,13 @@ const NewReceipt = () => {
         
         {error && <Alert variant="danger">{error}</Alert>}
         {success && <Alert variant="success">{success}</Alert>}
+        {scanSuccess && <Alert variant="info">{scanSuccess}</Alert>}
+        
+        {/* Barcode Reader Component */}
+        <BarcodeReader
+          onError={handleScanError}
+          onScan={handleScan}
+        />
         
         <Row>
           <Col lg={7}>
@@ -274,11 +332,21 @@ const NewReceipt = () => {
                     />
                   </Form.Group>
                   
+                  <Card className="mb-3">
+                    <Card.Body className="pb-0">
+                      <Card.Title className="mb-3">Barcode Scanner</Card.Title>
+                      <p className="text-muted mb-3">
+                        Scan product barcodes to automatically add items to the receipt. 
+                        Items with registered barcodes will be added automatically.
+                      </p>
+                    </Card.Body>
+                  </Card>
+                  
                   <h5 className="mt-4 mb-3">Items</h5>
                   
                   {items.map((item, index) => (
                     <Row key={index} className="mb-3 align-items-end">
-                      <Col md={5}>
+                      <Col sm={5}>
                         <Form.Group>
                           <Form.Label>Item Name</Form.Label>
                           <Form.Control
@@ -286,16 +354,16 @@ const NewReceipt = () => {
                             required
                             value={item.name}
                             onChange={(e) => handleItemChange(index, 'name', e.target.value)}
-                            list={`itemOptions-${index}`}
+                            list={`itemSuggestions-${index}`}
                           />
-                          <datalist id={`itemOptions-${index}`}>
+                          <datalist id={`itemSuggestions-${index}`}>
                             {itemSuggestions.map((suggestion, i) => (
                               <option key={i} value={suggestion} />
                             ))}
                           </datalist>
                         </Form.Group>
                       </Col>
-                      <Col md={3}>
+                      <Col sm={3}>
                         <Form.Group>
                           <Form.Label>Price ($)</Form.Label>
                           <Form.Control
@@ -308,7 +376,7 @@ const NewReceipt = () => {
                           />
                         </Form.Group>
                       </Col>
-                      <Col md={2}>
+                      <Col sm={2}>
                         <Form.Group>
                           <Form.Label>Qty</Form.Label>
                           <Form.Control
@@ -320,13 +388,13 @@ const NewReceipt = () => {
                           />
                         </Form.Group>
                       </Col>
-                      <Col md={2} className="d-flex">
-                        <Button
-                          variant="outline-danger"
-                          size="sm"
+                      <Col sm={2} className="d-flex justify-content-end">
+                        <Button 
+                          variant="outline-danger" 
+                          size="sm" 
                           onClick={() => removeItem(index)}
-                          className="ms-auto"
                           disabled={items.length <= 1}
+                          className="mt-1"
                         >
                           Remove
                         </Button>
@@ -334,11 +402,13 @@ const NewReceipt = () => {
                     </Row>
                   ))}
                   
-                  <div className="mb-4">
-                    <Button variant="outline-primary" onClick={addItem} size="sm">
-                      + Add Item
-                    </Button>
-                  </div>
+                  <Button 
+                    variant="outline-primary" 
+                    className="mb-4" 
+                    onClick={addItem}
+                  >
+                    + Add Item
+                  </Button>
                   
                   <div className="d-flex mt-4">
                     <Button 
@@ -399,7 +469,7 @@ const NewReceipt = () => {
                   
                   <hr />
                   
-                  <Table borderless size="sm" className="receipt-table">
+                  <Table borderless className="receipt-table">
                     <thead>
                       <tr>
                         <th>Item</th>
