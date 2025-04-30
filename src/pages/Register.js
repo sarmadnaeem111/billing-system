@@ -12,6 +12,7 @@ const Register = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [registrationComplete, setRegistrationComplete] = useState(false);
   const { registerShop } = useAuth();
   const navigate = useNavigate();
 
@@ -29,12 +30,14 @@ const Register = () => {
     const shopDetails = {
       shopName,
       address,
-      phoneNumber
+      phoneNumber,
+      status: 'pending', // Set status to pending for admin approval
+      createdAt: new Date().toISOString()
     };
     
     registerShop(email, password, shopDetails)
       .then(() => {
-        navigate('/dashboard');
+        setRegistrationComplete(true);
       })
       .catch(error => {
         setError('Failed to create an account. ' + error.message);
@@ -46,96 +49,130 @@ const Register = () => {
   };
 
   return (
-    <Container className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
-      <div className="w-100" style={{ maxWidth: '600px' }}>
-        <Card>
-          <Card.Body>
-            <h2 className="text-center mb-4">Shop Billing System</h2>
-            <h4 className="text-center mb-4">Register Your Shop</h4>
-            {error && <Alert variant="danger">{error}</Alert>}
-            
-            <Form onSubmit={handleSubmit}>
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3" controlId="email">
-                    <Form.Label>Email</Form.Label>
-                    <Form.Control 
-                      type="email" 
-                      required 
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3" controlId="shopName">
-                    <Form.Label>Shop Name</Form.Label>
-                    <Form.Control 
-                      type="text" 
-                      required 
-                      value={shopName}
-                      onChange={(e) => setShopName(e.target.value)}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
+    <Container className="py-5">
+      <Row className="justify-content-center">
+        <Col md={8} lg={6}>
+          <Card className="shadow-sm">
+            <Card.Body className="p-4">
+              <div className="text-center mb-4">
+                <h2>Register Your Shop</h2>
+                <p className="text-muted">Create an account to get started</p>
+              </div>
               
-              <Form.Group className="mb-3" controlId="address">
-                <Form.Label>Shop Address</Form.Label>
-                <Form.Control 
-                  type="text" 
-                  required 
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                />
-              </Form.Group>
-              
-              <Form.Group className="mb-3" controlId="phoneNumber">
-                <Form.Label>Contact Number</Form.Label>
-                <Form.Control 
-                  type="tel" 
-                  required 
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                />
-              </Form.Group>
-              
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3" controlId="password">
-                    <Form.Label>Password</Form.Label>
-                    <Form.Control 
-                      type="password" 
-                      required 
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3" controlId="confirmPassword">
-                    <Form.Label>Confirm Password</Form.Label>
-                    <Form.Control 
-                      type="password" 
-                      required 
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-              
-              <Button disabled={loading} className="w-100 mt-2" type="submit">
-                Register
-              </Button>
-            </Form>
-          </Card.Body>
-        </Card>
-        
-        <div className="w-100 text-center mt-2">
-          Already have an account? <Link to="/login">Log In</Link>
-        </div>
-      </div>
+              {registrationComplete ? (
+                <Alert variant="success">
+                  <Alert.Heading>Registration Successful!</Alert.Heading>
+                  <p>
+                    Your account has been submitted for approval. Once an administrator approves your account, 
+                    you will be able to login. This process usually takes 1-2 business days.
+                  </p>
+                  <hr />
+                  <div className="d-flex justify-content-center">
+                    <Button 
+                      variant="outline-success"
+                      onClick={() => navigate('/login')}
+                    >
+                      Go to Login
+                    </Button>
+                  </div>
+                </Alert>
+              ) : (
+                <>
+                  {error && <Alert variant="danger">{error}</Alert>}
+                  
+                  <Form onSubmit={handleSubmit}>
+                    <Row>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Shop Name</Form.Label>
+                          <Form.Control
+                            type="text"
+                            value={shopName}
+                            onChange={(e) => setShopName(e.target.value)}
+                            required
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Phone Number</Form.Label>
+                          <Form.Control
+                            type="text"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    
+                    <Form.Group className="mb-3">
+                      <Form.Label>Address</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                      />
+                    </Form.Group>
+                    
+                    <Form.Group className="mb-3">
+                      <Form.Label>Email</Form.Label>
+                      <Form.Control
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </Form.Group>
+                    
+                    <Row>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Password</Form.Label>
+                          <Form.Control
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            minLength="6"
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>Confirm Password</Form.Label>
+                          <Form.Control
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                            minLength="6"
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    
+                    <div className="d-grid gap-2">
+                      <Button 
+                        variant="primary" 
+                        type="submit" 
+                        disabled={loading}
+                      >
+                        {loading ? 'Creating Account...' : 'Register'}
+                      </Button>
+                    </div>
+                  </Form>
+                  
+                  <div className="text-center mt-3">
+                    <p>
+                      Already have an account? <Link to="/login">Login</Link>
+                    </p>
+                  </div>
+                </>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
     </Container>
   );
 };
