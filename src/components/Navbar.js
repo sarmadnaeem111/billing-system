@@ -45,6 +45,9 @@ const MainNavbar = () => {
                   <NavDropdown.Item as={Link} to="/mark-attendance">Mark Attendance</NavDropdown.Item>
                   <NavDropdown.Item as={Link} to="/attendance-report">Attendance Report</NavDropdown.Item>
                 </NavDropdown>
+                
+                {/* Settings */}
+                <Nav.Link as={Link} to="/settings">Settings</Nav.Link>
               </>
             )}
           </Nav>
