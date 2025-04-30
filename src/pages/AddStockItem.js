@@ -3,10 +3,10 @@ import { Container, Form, Button, Row, Col, Card, Alert } from 'react-bootstrap'
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import MainNavbar from '../components/Navbar';
-import { addStockItem } from '../utils/stockUtils';
+import { addStockItem as addStockItemToFirestore } from '../utils/stockUtils';
 
 const AddStockItem = () => {
-  const { currentUser, shopData } = useAuth();
+  const { currentUser } = useAuth();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -64,7 +64,7 @@ const AddStockItem = () => {
     };
     
     // Save to Firestore
-    addStockItem(currentUser.uid, itemData)
+    addStockItemToFirestore(currentUser.uid, itemData)
       .then(() => {
         navigate('/stock');
       })
