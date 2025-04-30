@@ -15,7 +15,7 @@ const NewReceipt = () => {
   const [cashierName, setCashierName] = useState('');
   const [managerName, setManagerName] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('Cash');
-  const [transactionId, setTransactionId] = useState(generateTransactionId());
+  const [transactionId] = useState(generateTransactionId());
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
