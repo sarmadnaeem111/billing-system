@@ -5,7 +5,7 @@ import {
   signOut,
   onAuthStateChanged
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
 
 const AuthContext = createContext();
@@ -56,6 +56,21 @@ export function AuthProvider({ children }) {
         }
       });
   }
+  
+  // Update shop data
+  function updateShopData(updatedData) {
+    if (!currentUser) return Promise.reject(new Error('No user logged in'));
+    
+    return updateDoc(doc(db, 'shops', currentUser.uid), updatedData)
+      .then(() => {
+        // Update local state with new data
+        setShopData(prevData => ({
+          ...prevData,
+          ...updatedData
+        }));
+        return true;
+      });
+  }
 
   // Listen for auth state changes
   useEffect(() => {
@@ -81,7 +96,8 @@ export function AuthProvider({ children }) {
     registerShop,
     login,
     logout,
-    getShopData
+    getShopData,
+    updateShopData
   };
 
   return (
