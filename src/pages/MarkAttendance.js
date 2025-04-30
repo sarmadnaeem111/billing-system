@@ -8,8 +8,7 @@ import {
   getDocs, 
   addDoc, 
   updateDoc,
-  doc, 
-  getDoc
+  doc
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
