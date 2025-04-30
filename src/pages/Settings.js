@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import MainNavbar from '../components/Navbar';
 
 const Settings = () => {
-  const { currentUser, shopData, updateShopData } = useAuth();
+  const { shopData, updateShopData } = useAuth();
   
   // Basic shop info
   const [shopName, setShopName] = useState('');
