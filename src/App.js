@@ -17,6 +17,7 @@ import EditEmployee from './pages/EditEmployee';
 import Attendance from './pages/Attendance';
 import MarkAttendance from './pages/MarkAttendance';
 import AttendanceReport from './pages/AttendanceReport';
+import Settings from './pages/Settings';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 
@@ -94,6 +95,12 @@ function App() {
             <Route path="/attendance-report" element={
               <PrivateRoute>
                 <AttendanceReport />
+              </PrivateRoute>
+            } />
+            {/* Settings Route */}
+            <Route path="/settings" element={
+              <PrivateRoute>
+                <Settings />
               </PrivateRoute>
             } />
             <Route path="/" element={<Navigate replace to="/login" />} />
