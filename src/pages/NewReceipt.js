@@ -225,7 +225,7 @@ const NewReceipt = () => {
       shopDetails: {
         name: shopData.shopName,
         address: shopData.address,
-        phone: shopData.phoneNumber
+        phone: shopData.phoneNumbers ? shopData.phoneNumbers.join(', ') : shopData.phoneNumber
       },
       cashierName,
       managerName,
@@ -289,22 +289,72 @@ const NewReceipt = () => {
                     <Col md={6}>
                       <Form.Group className="mb-3">
                         <Form.Label>Cashier Name</Form.Label>
-                        <Form.Control
-                          type="text"
-                          required
-                          value={cashierName}
-                          onChange={(e) => setCashierName(e.target.value)}
-                        />
+                        {shopData && shopData.cashierNames && shopData.cashierNames.length > 0 ? (
+                          <Form.Select
+                            value={cashierName}
+                            onChange={(e) => setCashierName(e.target.value)}
+                            required
+                          >
+                            <option value="">Select Cashier</option>
+                            {shopData.cashierNames.map((name, index) => (
+                              <option key={index} value={name}>{name}</option>
+                            ))}
+                            <option value="custom">Other (Enter Manually)</option>
+                          </Form.Select>
+                        ) : (
+                          <Form.Control
+                            type="text"
+                            required
+                            value={cashierName}
+                            onChange={(e) => setCashierName(e.target.value)}
+                          />
+                        )}
+                        
+                        {/* Show manual input if 'custom' is selected */}
+                        {cashierName === 'custom' && (
+                          <Form.Control
+                            type="text"
+                            className="mt-2"
+                            placeholder="Enter cashier name"
+                            value=""
+                            onChange={(e) => setCashierName(e.target.value)}
+                            required
+                          />
+                        )}
                       </Form.Group>
                     </Col>
                     <Col md={6}>
                       <Form.Group className="mb-3">
                         <Form.Label>Manager Name (Optional)</Form.Label>
-                        <Form.Control
-                          type="text"
-                          value={managerName}
-                          onChange={(e) => setManagerName(e.target.value)}
-                        />
+                        {shopData && shopData.managerNames && shopData.managerNames.length > 0 ? (
+                          <Form.Select
+                            value={managerName}
+                            onChange={(e) => setManagerName(e.target.value)}
+                          >
+                            <option value="">Select Manager</option>
+                            {shopData.managerNames.map((name, index) => (
+                              <option key={index} value={name}>{name}</option>
+                            ))}
+                            <option value="custom">Other (Enter Manually)</option>
+                          </Form.Select>
+                        ) : (
+                          <Form.Control
+                            type="text"
+                            value={managerName}
+                            onChange={(e) => setManagerName(e.target.value)}
+                          />
+                        )}
+                        
+                        {/* Show manual input if 'custom' is selected */}
+                        {managerName === 'custom' && (
+                          <Form.Control
+                            type="text"
+                            className="mt-2"
+                            placeholder="Enter manager name"
+                            value=""
+                            onChange={(e) => setManagerName(e.target.value)}
+                          />
+                        )}
                       </Form.Group>
                     </Col>
                   </Row>
@@ -451,7 +501,11 @@ const NewReceipt = () => {
                   <div className="text-center mb-4">
                     <h3>{shopData?.shopName || 'Shop Name'}</h3>
                     <p className="mb-0">{shopData?.address || 'Shop Address'}</p>
-                    <p>Tel: {shopData?.phoneNumber || 'Phone Number'}</p>
+                    <p>
+                      Tel: {shopData?.phoneNumbers ? 
+                        shopData.phoneNumbers[0] : 
+                        (shopData?.phoneNumber || 'Phone Number')}
+                    </p>
                   </div>
                   
                   <Row className="mb-3">
