@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Table, Button, Card, Form, InputGroup, Row, Col, Badge, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,7 +7,7 @@ import { getShopStock, deleteStockItem } from '../utils/stockUtils';
 import './ViewStock.css'; // Import the custom CSS
 
 const ViewStock = () => {
-  const { currentUser, shopData } = useAuth();
+  const { currentUser } = useAuth();
   const [stockItems, setStockItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,7 +18,7 @@ const ViewStock = () => {
   const [itemToDelete, setItemToDelete] = useState(null);
   const navigate = useNavigate();
 
-  const fetchStock = () => {
+  const fetchStock = useCallback(() => {
     if (!currentUser) return;
     
     setLoading(true);
@@ -26,6 +26,7 @@ const ViewStock = () => {
     // Create a simple function to fetch stock items
     getShopStock(currentUser.uid)
       .then(stockData => {
+        console.log('Stock data fetched:', stockData);
         setStockItems(stockData);
       })
       .catch(error => {
@@ -34,11 +35,17 @@ const ViewStock = () => {
       .finally(() => {
         setLoading(false);
       });
-  };
+  }, [currentUser]);
 
   useEffect(() => {
+    // Redirect to login if user is not authenticated
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+    
     fetchStock();
-  }, [currentUser]);
+  }, [fetchStock, currentUser, navigate]);
 
   // Get unique categories for filter dropdown
   const categories = [...new Set(stockItems.map(item => item.category))].filter(Boolean);
@@ -261,11 +268,21 @@ const ViewStock = () => {
                   </Table>
                 </div>
               ) : (
-                <p className="text-center">
-                  {stockItems.length > 0 
-                    ? 'No items match your search criteria.'
-                    : 'No stock items found. Start by adding new items.'}
-                </p>
+                <div className="text-center py-4">
+                  <h5>No stock items found</h5>
+                  <p className="text-muted">
+                    {searchTerm || categoryFilter 
+                      ? "No items match your search criteria. Try adjusting your filters."
+                      : "You haven't added any stock items yet. Click 'Add New Item' to get started."}
+                  </p>
+                  <Button 
+                    variant="primary" 
+                    onClick={() => navigate('/add-stock')}
+                    className="mt-2"
+                  >
+                    Add Your First Item
+                  </Button>
+                </div>
               )}
             </Card.Body>
           </Card>
