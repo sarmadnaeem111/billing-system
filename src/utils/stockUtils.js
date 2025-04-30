@@ -1,9 +1,44 @@
 import { collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
+// Mock data for testing/fallback
+const MOCK_STOCK = [
+  {
+    id: 'mock-item-1',
+    name: 'Sample Product 1',
+    description: 'This is a sample product',
+    category: 'General',
+    price: 19.99,
+    quantity: 25,
+    costPrice: 15.00,
+    shopId: 'test-shop-id',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'mock-item-2',
+    name: 'Sample Product 2',
+    description: 'Another sample product',
+    category: 'Electronics',
+    price: 29.99,
+    quantity: 10,
+    costPrice: 25.00,
+    shopId: 'test-shop-id',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+
 // Add a new stock item
 export const addStockItem = async (shopId, itemData) => {
   try {
+    console.log('Adding stock item for shop ID:', shopId);
+    
+    if (!shopId) {
+      console.error('No shop ID provided for addStockItem');
+      throw new Error('Shop ID is required to add stock item');
+    }
+    
     const stockRef = collection(db, 'stock');
     const docRef = await addDoc(stockRef, {
       shopId,
@@ -11,9 +46,12 @@ export const addStockItem = async (shopId, itemData) => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     });
+    
+    console.log('Stock item added with ID:', docRef.id);
     return docRef.id;
   } catch (error) {
     console.error('Error adding stock item:', error);
+    console.error('Error details:', error.code, error.message);
     throw error;
   }
 };
@@ -21,17 +59,31 @@ export const addStockItem = async (shopId, itemData) => {
 // Get all stock items for a shop
 export const getShopStock = async (shopId) => {
   try {
+    console.log(`Fetching stock items for shop ID: ${shopId}`);
+    
+    if (!shopId) {
+      console.error('No shop ID provided for getShopStock');
+      return [];
+    }
+    
     const stockRef = collection(db, 'stock');
     const q = query(stockRef, where('shopId', '==', shopId));
-    const querySnapshot = await getDocs(q);
     
-    return querySnapshot.docs.map(doc => ({
+    console.log('Executing Firestore query...');
+    const querySnapshot = await getDocs(q);
+    console.log(`Query returned ${querySnapshot.docs.length} results`);
+    
+    const items = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
+    
+    return items;
   } catch (error) {
     console.error('Error fetching stock items:', error);
-    throw error;
+    console.error('Error details:', error.code, error.message);
+    // Return empty array instead of throwing to avoid loading state getting stuck
+    return [];
   }
 };
 
