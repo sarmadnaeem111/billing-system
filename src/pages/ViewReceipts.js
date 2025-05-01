@@ -7,6 +7,7 @@ import { formatCurrency, formatDate } from '../utils/receiptUtils';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import './ViewReceipts.css'; // Import the custom CSS
+import { Translate, TranslateData, useTranslatedData, useTranslatedAttribute } from '../utils';
 
 const ViewReceipts = () => {
   const { currentUser } = useAuth();
@@ -17,6 +18,11 @@ const ViewReceipts = () => {
   const [sortDirection, setSortDirection] = useState('desc');
   const [dateFilter, setDateFilter] = useState('');
   const navigate = useNavigate();
+
+  // Translate receipts data
+  const translatedReceipts = useTranslatedData(receipts);
+  // Get translations for attributes
+  const getTranslatedAttr = useTranslatedAttribute();
 
   useEffect(() => {
     // Convert to non-async function
@@ -52,7 +58,7 @@ const ViewReceipts = () => {
   }, [currentUser]);
 
   // Handle search and filtering
-  const filteredReceipts = receipts
+  const filteredReceipts = translatedReceipts
     .filter(receipt => {
       const matchesSearch = 
         receipt.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -92,22 +98,41 @@ const ViewReceipts = () => {
     navigate(`/receipt/${receiptId}`);
   };
 
+  // Function to translate payment method
+  const getTranslatedPaymentMethod = (method) => {
+    // Common payment methods to translate
+    switch(method) {
+      case 'Cash':
+        return <Translate textKey="cash" />;
+      case 'Credit Card':
+        return <Translate textKey="creditCard" />;
+      case 'Debit Card':
+        return <Translate textKey="debitCard" />;
+      case 'Bank Transfer':
+        return <Translate textKey="bankTransfer" />;
+      case 'Mobile Payment':
+        return <Translate textKey="mobilePayment" />;
+      default:
+        return method;
+    }
+  };
+
   return (
     <>
       <MainNavbar />
       <Container>
-        <h2 className="mb-4">All Receipts</h2>
+        <h2 className="mb-4"><Translate textKey="allReceipts" /></h2>
         
         <Card className="mb-4">
           <Card.Body>
             <Row>
               <Col md={6} lg={4}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Search Receipts</Form.Label>
+                  <Form.Label><Translate textKey="searchReceipts" /></Form.Label>
                   <InputGroup>
                     <Form.Control
                       type="text"
-                      placeholder="Search by ID, cashier, or items..."
+                      placeholder={getTranslatedAttr("searchPlaceholder")}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -116,7 +141,7 @@ const ViewReceipts = () => {
                         variant="outline-secondary" 
                         onClick={() => setSearchTerm('')}
                       >
-                        Clear
+                        <Translate textKey="clear" />
                       </Button>
                     )}
                   </InputGroup>
@@ -125,7 +150,7 @@ const ViewReceipts = () => {
               
               <Col md={6} lg={4}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Filter by Date</Form.Label>
+                  <Form.Label><Translate textKey="filterByDate" /></Form.Label>
                   <InputGroup>
                     <Form.Control
                       type="date"
@@ -137,7 +162,7 @@ const ViewReceipts = () => {
                         variant="outline-secondary" 
                         onClick={() => setDateFilter('')}
                       >
-                        Clear
+                        <Translate textKey="clear" />
                       </Button>
                     )}
                   </InputGroup>
@@ -148,7 +173,7 @@ const ViewReceipts = () => {
         </Card>
         
         {loading ? (
-          <p className="text-center">Loading receipts...</p>
+          <p className="text-center"><Translate textKey="loadingReceipts" /></p>
         ) : (
           <Card>
             <Card.Body>
@@ -161,47 +186,47 @@ const ViewReceipts = () => {
                           className="cursor-pointer" 
                           onClick={() => handleSort('timestamp')}
                         >
-                          Date 
+                          <Translate textKey="date" />
                           {sortField === 'timestamp' && (
                             <span>{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
                           )}
                         </th>
-                        <th>Transaction ID</th>
-                        <th>Cashier</th>
-                        <th className="item-column">Items</th>
+                        <th><Translate textKey="transactionId" /></th>
+                        <th><Translate textKey="cashier" /></th>
+                        <th className="item-column"><Translate textKey="items" /></th>
                         <th 
                           className="cursor-pointer" 
                           onClick={() => handleSort('totalAmount')}
                         >
-                          Total Amount
+                          <Translate textKey="totalAmount" />
                           {sortField === 'totalAmount' && (
                             <span>{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
                           )}
                         </th>
-                        <th>Payment</th>
-                        <th>Action</th>
+                        <th><Translate textKey="payment" /></th>
+                        <th><Translate textKey="action" /></th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredReceipts.map(receipt => (
                         <tr key={receipt.id}>
-                          <td data-label="Date">{formatDate(receipt.timestamp)}</td>
-                          <td data-label="ID" className="text-nowrap">{receipt.transactionId}</td>
-                          <td data-label="Cashier">{receipt.cashierName}</td>
-                          <td data-label="Items" className="item-column">
+                          <td data-label={getTranslatedAttr("date")}>{formatDate(receipt.timestamp)}</td>
+                          <td data-label={getTranslatedAttr("transactionId")} className="text-nowrap">{receipt.transactionId}</td>
+                          <td data-label={getTranslatedAttr("cashier")}>{receipt.cashierName}</td>
+                          <td data-label={getTranslatedAttr("items")} className="item-column">
                             <div className="item-cell-content">
                               {receipt.items.map(item => item.name).join(', ')}
                             </div>
                           </td>
-                          <td data-label="Amount">{formatCurrency(receipt.totalAmount)}</td>
-                          <td data-label="Payment">{receipt.paymentMethod}</td>
-                          <td data-label="Action">
+                          <td data-label={getTranslatedAttr("totalAmount")}>{formatCurrency(receipt.totalAmount)}</td>
+                          <td data-label={getTranslatedAttr("payment")}>{getTranslatedPaymentMethod(receipt.paymentMethod)}</td>
+                          <td data-label={getTranslatedAttr("action")}>
                             <Button 
                               variant="outline-primary" 
                               size="sm"
                               onClick={() => handleViewReceipt(receipt.id)}
                             >
-                              View
+                              <Translate textKey="view" />
                             </Button>
                           </td>
                         </tr>
@@ -212,8 +237,8 @@ const ViewReceipts = () => {
               ) : (
                 <p className="text-center">
                   {receipts.length > 0 
-                    ? 'No receipts match your search criteria.'
-                    : 'No receipts found. Start by creating a new receipt.'}
+                    ? <Translate textKey="noReceiptsMatch" />
+                    : <Translate textKey="noReceiptsFound" />}
                 </p>
               )}
               
@@ -222,7 +247,7 @@ const ViewReceipts = () => {
                   variant="success" 
                   onClick={() => navigate('/new-receipt')}
                 >
-                  Create New Receipt
+                  <Translate textKey="createNewReceipt" />
                 </Button>
               </div>
             </Card.Body>
