@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Table, Button, Form, Row, Col, Alert, Spinner } from 'react-bootstrap';
+import { Container, Table, Button, Form, Row, Col, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import MainNavbar from '../components/Navbar';
 import "./Attendance.css";  // Import the CSS file for responsive styles
+import { Translate, useTranslatedAttribute } from '../utils';
 
 const Attendance = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  
+  // Get translations for attributes
+  const getTranslatedAttr = useTranslatedAttribute();
   
   const [attendance, setAttendance] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -39,12 +43,12 @@ const Attendance = () => {
         
         setEmployees(employeesList);
       } catch (err) {
-        setError('Failed to load employees. Please try again.');
+        setError(getTranslatedAttr('failedToLoadEmployees'));
       }
     };
     
     fetchEmployees();
-  }, [currentUser]);
+  }, [currentUser, getTranslatedAttr]);
   
   useEffect(() => {
     const fetchAttendance = async () => {
@@ -80,14 +84,14 @@ const Attendance = () => {
           const employee = employees.find(emp => emp.id === record.employeeId);
           return {
             ...record,
-            employeeName: employee ? employee.name : 'Unknown Employee'
+            employeeName: employee ? employee.name : getTranslatedAttr('unknownEmployee')
           };
         });
         
         setAttendance(attendanceWithNames);
         setLoading(false);
       } catch (err) {
-        setError('Failed to load attendance records. Please try again.');
+        setError(getTranslatedAttr('failedToLoadAttendance'));
         setLoading(false);
       }
     };
@@ -95,138 +99,115 @@ const Attendance = () => {
     if (employees.length > 0) {
       fetchAttendance();
     }
-  }, [currentUser, selectedDate, selectedEmployee, employees]);
+  }, [currentUser, selectedDate, selectedEmployee, employees, getTranslatedAttr]);
   
-  const getStatusClass = (status) => {
-    switch (status) {
+  // Translate status
+  const getTranslatedStatus = (status) => {
+    switch(status) {
       case 'present':
-        return 'text-success';
+        return <Translate textKey="present" />;
       case 'absent':
-        return 'text-danger';
+        return <Translate textKey="absent" />;
       case 'half-day':
-        return 'text-warning';
+        return <Translate textKey="halfDay" />;
       case 'leave':
-        return 'text-primary';
+        return <Translate textKey="onLeave" />;
       default:
-        return '';
+        return status;
     }
   };
   
   return (
-    <div>
+    <>
       <MainNavbar />
-      <Container className="mt-4">
-        <h2 className="mb-4">Attendance Records</h2>
+      <Container>
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h2><Translate textKey="attendanceRecords" /></h2>
+          <Button 
+            variant="success" 
+            onClick={() => navigate('/mark-attendance')}
+            className="me-2"
+          >
+            <Translate textKey="markAttendance" />
+          </Button>
+        </div>
         
-        <Row className="mb-4 attendance-filters">
-          <Col md={6} lg={4}>
-            <Form.Group className="mb-3">
-              <Form.Label>Select Date</Form.Label>
-              <Form.Control
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-              />
-            </Form.Group>
-          </Col>
-          
-          <Col md={6} lg={4}>
-            <Form.Group className="mb-3">
-              <Form.Label>Select Employee</Form.Label>
-              <Form.Select
-                value={selectedEmployee}
-                onChange={(e) => setSelectedEmployee(e.target.value)}
-              >
-                <option value="all">All Employees</option>
-                {employees.map(employee => (
-                  <option key={employee.id} value={employee.id}>
-                    {employee.name}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          </Col>
-          
-          <Col md={12} lg={4} className="d-flex align-items-end mb-3">
-            <Button 
-              variant="outline-primary"
-              onClick={() => navigate('/attendance-report')}
-              className="ms-auto"
-            >
-              Generate Report
-            </Button>
-          </Col>
-        </Row>
-        
-        <Row>
-          <Col>
-            <div className="mb-3">
-              <Button
-                variant="primary"
-                onClick={() => navigate("/mark-attendance")}
-              >
-                Mark Attendance
-              </Button>
-            </div>
-          </Col>
-        </Row>
+        <div className="mb-4">
+          <Row>
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label><Translate textKey="date" /></Form.Label>
+                <Form.Control
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                />
+              </Form.Group>
+            </Col>
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label><Translate textKey="employee" /></Form.Label>
+                <Form.Select
+                  value={selectedEmployee}
+                  onChange={(e) => setSelectedEmployee(e.target.value)}
+                >
+                  <option value="all"><Translate textKey="allEmployees" /></option>
+                  {employees.map(emp => (
+                    <option key={emp.id} value={emp.id}>{emp.name}</option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
+        </div>
         
         {loading ? (
-          <div className="text-center">
-            <Spinner animation="border" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </Spinner>
-          </div>
-        ) : error ? (
-          <div className="alert alert-danger" role="alert">
-            {error}
+          <div className="text-center p-4">
+            <Spinner animation="border" variant="primary" />
+            <p className="mt-2"><Translate textKey="loadingAttendance" /></p>
           </div>
         ) : (
-          <div className="table-responsive attendance-table-container">
-            <Table striped bordered hover responsive="sm" className="attendance-table">
-              <thead>
-                <tr>
-                  <th>Employee</th>
-                  <th>Date</th>
-                  <th>Status</th>
-                  <th>Check In</th>
-                  <th>Check Out</th>
-                  <th>Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {attendance.length === 0 ? (
-                  <tr>
-                    <td colSpan="6" className="text-center">
-                      No attendance records found for the selected criteria.
-                    </td>
-                  </tr>
-                ) : (
-                  attendance.map((record) => (
-                    <tr key={record.id}>
-                      <td data-label="Employee">{record.employeeName}</td>
-                      <td data-label="Date">
-                        {record.date instanceof Timestamp
-                          ? record.date.toDate().toLocaleDateString()
-                          : new Date(record.date).toLocaleDateString()}
-                      </td>
-                      <td data-label="Status">
-                        <span className={getStatusClass(record.status)}>
-                          {record.status}
-                        </span>
-                      </td>
-                      <td data-label="Check In" className="text-nowrap">{record.checkIn || "-"}</td>
-                      <td data-label="Check Out" className="text-nowrap">{record.checkOut || "-"}</td>
-                      <td data-label="Notes" className="notes-cell">{record.notes || "-"}</td>
+          <>
+            {attendance.length > 0 ? (
+              <div className="table-responsive attendance-table-container">
+                <Table striped hover responsive="sm" className="attendance-table">
+                  <thead>
+                    <tr>
+                      <th><Translate textKey="employee" /></th>
+                      <th><Translate textKey="status" /></th>
+                      <th><Translate textKey="checkIn" /></th>
+                      <th><Translate textKey="checkOut" /></th>
+                      <th><Translate textKey="notes" /></th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </Table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {attendance.map(record => (
+                      <tr key={record.id}>
+                        <td data-label={getTranslatedAttr("employee")}>{record.employeeName}</td>
+                        <td data-label={getTranslatedAttr("status")}>{getTranslatedStatus(record.status)}</td>
+                        <td data-label={getTranslatedAttr("checkIn")}>{record.checkIn || '-'}</td>
+                        <td data-label={getTranslatedAttr("checkOut")}>{record.checkOut || '-'}</td>
+                        <td data-label={getTranslatedAttr("notes")}>{record.notes || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
+            ) : (
+              <div className="text-center p-4">
+                <p><Translate textKey="noAttendanceRecords" /></p>
+                <Button 
+                  variant="primary"
+                  onClick={() => navigate('/mark-attendance')}
+                >
+                  <Translate textKey="markAttendance" />
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </Container>
-    </div>
+    </>
   );
 };
 
