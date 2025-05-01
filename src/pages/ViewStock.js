@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import MainNavbar from '../components/Navbar';
 import { getShopStock, deleteStockItem } from '../utils/stockUtils';
 import './ViewStock.css'; // Import the custom CSS
+import { Translate, useTranslatedAttribute } from '../utils';
 
 const ViewStock = () => {
   const { currentUser } = useAuth();
@@ -17,6 +18,9 @@ const ViewStock = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const navigate = useNavigate();
+  
+  // Get translations for attributes
+  const getTranslatedAttr = useTranslatedAttribute();
 
   const fetchStock = useCallback(() => {
     if (!currentUser) return;
@@ -122,12 +126,12 @@ const ViewStock = () => {
       <MainNavbar />
       <Container>
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2>Stock Inventory</h2>
+          <h2><Translate textKey="stockInventory" /></h2>
           <Button 
             variant="success" 
             onClick={() => navigate('/add-stock')}
           >
-            Add New Item
+            <Translate textKey="addNewItem" />
           </Button>
         </div>
         
@@ -136,11 +140,11 @@ const ViewStock = () => {
             <Row>
               <Col md={6} lg={4}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Search Items</Form.Label>
+                  <Form.Label><Translate textKey="searchItems" /></Form.Label>
                   <InputGroup>
                     <Form.Control
                       type="text"
-                      placeholder="Search by name, description..."
+                      placeholder={getTranslatedAttr("searchItemsPlaceholder")}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -149,7 +153,7 @@ const ViewStock = () => {
                         variant="outline-secondary" 
                         onClick={() => setSearchTerm('')}
                       >
-                        Clear
+                        <Translate textKey="clear" />
                       </Button>
                     )}
                   </InputGroup>
@@ -158,12 +162,12 @@ const ViewStock = () => {
               
               <Col md={6} lg={4}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Filter by Category</Form.Label>
+                  <Form.Label><Translate textKey="filterByCategory" /></Form.Label>
                   <Form.Select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
                   >
-                    <option value="">All Categories</option>
+                    <option value=""><Translate textKey="allCategories" /></option>
                     {categories.map((category, index) => (
                       <option key={index} value={category}>
                         {category}
@@ -177,7 +181,7 @@ const ViewStock = () => {
         </Card>
         
         {loading ? (
-          <p className="text-center">Loading stock items...</p>
+          <p className="text-center"><Translate textKey="loadingStockItems" /></p>
         ) : (
           <Card>
             <Card.Body>
@@ -190,18 +194,18 @@ const ViewStock = () => {
                           className="cursor-pointer" 
                           onClick={() => handleSort('name')}
                         >
-                          Item Name
+                          <Translate textKey="itemName" />
                           {sortField === 'name' && (
                             <span>{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
                           )}
                         </th>
-                        <th className="description-column">Description</th>
-                        <th>Category</th>
+                        <th className="description-column"><Translate textKey="description" /></th>
+                        <th><Translate textKey="category" /></th>
                         <th 
                           className="cursor-pointer"
                           onClick={() => handleSort('price')}
                         >
-                          Price ($)
+                          <Translate textKey="price" /> ($)
                           {sortField === 'price' && (
                             <span>{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
                           )}
@@ -210,7 +214,7 @@ const ViewStock = () => {
                           className="cursor-pointer"
                           onClick={() => handleSort('quantity')}
                         >
-                          Quantity
+                          <Translate textKey="quantity" />
                           {sortField === 'quantity' && (
                             <span>{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
                           )}
@@ -219,47 +223,47 @@ const ViewStock = () => {
                           className="cursor-pointer"
                           onClick={() => handleSort('updatedAt')}
                         >
-                          Last Updated
+                          <Translate textKey="lastUpdated" />
                           {sortField === 'updatedAt' && (
                             <span>{sortDirection === 'asc' ? ' ↑' : ' ↓'}</span>
                           )}
                         </th>
-                        <th>Actions</th>
+                        <th><Translate textKey="actions" /></th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredItems.map(item => (
                         <tr key={item.id}>
-                          <td data-label="Item Name" className="text-nowrap">{item.name}</td>
-                          <td data-label="Description" className="description-column">
+                          <td data-label={getTranslatedAttr("itemName")} className="text-nowrap">{item.name}</td>
+                          <td data-label={getTranslatedAttr("description")} className="description-column">
                             <div className="description-cell-content">
                               {item.description || '-'}
                             </div>
                           </td>
-                          <td data-label="Category">{item.category || '-'}</td>
-                          <td data-label="Price">${parseFloat(item.price).toFixed(2)}</td>
-                          <td data-label="Quantity">
+                          <td data-label={getTranslatedAttr("category")}>{item.category || '-'}</td>
+                          <td data-label={getTranslatedAttr("price")}>${parseFloat(item.price).toFixed(2)}</td>
+                          <td data-label={getTranslatedAttr("quantity")}>
                             <Badge bg={getQuantityBadgeVariant(item.quantity)}>
                               {item.quantity}
                             </Badge>
                           </td>
-                          <td data-label="Last Updated">{new Date(item.updatedAt).toLocaleDateString()}</td>
-                          <td data-label="Actions">
+                          <td data-label={getTranslatedAttr("lastUpdated")}>{new Date(item.updatedAt).toLocaleDateString()}</td>
+                          <td data-label={getTranslatedAttr("actions")}>
                             <Button 
                               variant="outline-primary" 
                               size="sm"
-                              className="me-2 mb-1"
                               onClick={() => navigate(`/edit-stock/${item.id}`)}
+                              className="me-1 mb-1"
                             >
-                              Edit
+                              <Translate textKey="edit" />
                             </Button>
                             <Button 
                               variant="outline-danger" 
                               size="sm"
-                              className="mb-1"
                               onClick={() => confirmDelete(item)}
+                              className="mb-1"
                             >
-                              Delete
+                              <Translate textKey="delete" />
                             </Button>
                           </td>
                         </tr>
@@ -268,21 +272,11 @@ const ViewStock = () => {
                   </Table>
                 </div>
               ) : (
-                <div className="text-center py-4">
-                  <h5>No stock items found</h5>
-                  <p className="text-muted">
-                    {searchTerm || categoryFilter 
-                      ? "No items match your search criteria. Try adjusting your filters."
-                      : "You haven't added any stock items yet. Click 'Add New Item' to get started."}
-                  </p>
-                  <Button 
-                    variant="primary" 
-                    onClick={() => navigate('/add-stock')}
-                    className="mt-2"
-                  >
-                    Add Your First Item
-                  </Button>
-                </div>
+                <p className="text-center">
+                  {stockItems.length > 0 
+                    ? <Translate textKey="noItemsMatch" />
+                    : <Translate textKey="noItemsFound" />}
+                </p>
               )}
             </Card.Body>
           </Card>
@@ -291,17 +285,18 @@ const ViewStock = () => {
         {/* Delete Confirmation Modal */}
         <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
           <Modal.Header closeButton>
-            <Modal.Title>Confirm Delete</Modal.Title>
+            <Modal.Title><Translate textKey="confirmDelete" /></Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            Are you sure you want to delete <strong>{itemToDelete?.name}</strong>? This action cannot be undone.
+            <p><Translate textKey="deleteItemConfirmation" /></p>
+            {itemToDelete && <p><strong>{itemToDelete.name}</strong></p>}
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-              Cancel
+              <Translate textKey="cancel" />
             </Button>
             <Button variant="danger" onClick={handleDelete}>
-              Delete Item
+              <Translate textKey="delete" />
             </Button>
           </Modal.Footer>
         </Modal>
