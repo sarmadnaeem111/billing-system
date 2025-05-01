@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import MainNavbar from '../components/Navbar';
 import { calculateTotal, generateTransactionId, saveReceipt } from '../utils/receiptUtils';
 import { getShopStock, updateStockQuantity } from '../utils/stockUtils';
+import { Translate, TranslateData, useTranslatedData } from '../utils';
 
 const NewReceipt = () => {
   const { currentUser, shopData } = useAuth();
@@ -25,6 +26,11 @@ const NewReceipt = () => {
   const [scanSuccess, setScanSuccess] = useState('');
   const pdfRef = useRef();
   const navigate = useNavigate();
+
+  // Translate shop data
+  const translatedShopData = useTranslatedData(shopData);
+  // Translate items data for the receipt
+  const translatedItems = useTranslatedData(items);
 
   // Fetch stock items for autocomplete and inventory check
   useEffect(() => {
@@ -44,7 +50,7 @@ const NewReceipt = () => {
   const handleScan = (data) => {
     if (!data) return;
     
-    setScanSuccess(`Scanned: ${data}`);
+    setScanSuccess(<><Translate textKey="scanned" />{data}</>);
     
     // Clear scan success message after 3 seconds
     setTimeout(() => setScanSuccess(''), 3000);
@@ -74,7 +80,20 @@ const NewReceipt = () => {
           }]);
         }
       } else {
-        setError(`Item with barcode ${data} not found in inventory`);
+        setError(
+          <TranslateData 
+            data={{
+              message: "itemNotFound",
+              barcode: data
+            }}
+          >
+            {(translatedData) => (
+              <>
+                {translatedData.message.replace('{barcode}', translatedData.barcode)}
+              </>
+            )}
+          </TranslateData>
+        );
         // Clear error after 3 seconds
         setTimeout(() => setError(''), 3000);
       }
@@ -84,7 +103,7 @@ const NewReceipt = () => {
   // Handle barcode scanning error
   const handleScanError = (err) => {
     console.error('Barcode scanning error:', err);
-    setError('Error scanning barcode. Please try again.');
+    setError(<Translate textKey="scanningError" />);
     // Clear error after 3 seconds
     setTimeout(() => setError(''), 3000);
   };
@@ -154,12 +173,13 @@ const NewReceipt = () => {
       if (!matchingStock) {
         invalidItems.push({
           name: item.name,
-          error: "Item not found in inventory"
+          error: "itemNotInInventory"
         });
       } else if (matchingStock.quantity < parseInt(item.quantity)) {
         invalidItems.push({
           name: item.name,
-          error: `Insufficient quantity (Available: ${matchingStock.quantity})`
+          error: "insufficientQuantity",
+          available: matchingStock.quantity
         });
       }
     }
@@ -183,7 +203,7 @@ const NewReceipt = () => {
     
     // Validate required fields
     if (!cashierName.trim()) {
-      setError('Cashier name is required');
+      setError(<Translate textKey="cashierRequired" />);
       setLoading(false);
       return;
     }
@@ -191,17 +211,17 @@ const NewReceipt = () => {
     // Validate items
     for (const item of items) {
       if (!item.name.trim() || !item.price || !item.quantity) {
-        setError('All item details are required');
+        setError(<Translate textKey="itemDetailsRequired" />);
         setLoading(false);
         return;
       }
       if (isNaN(parseFloat(item.price)) || parseFloat(item.price) <= 0) {
-        setError('Item prices must be valid numbers greater than 0');
+        setError(<Translate textKey="invalidPrices" />);
         setLoading(false);
         return;
       }
       if (isNaN(parseInt(item.quantity)) || parseInt(item.quantity) <= 0) {
-        setError('Item quantities must be valid numbers greater than 0');
+        setError(<Translate textKey="invalidQuantities" />);
         setLoading(false);
         return;
       }
@@ -210,11 +230,14 @@ const NewReceipt = () => {
     // Validate inventory
     const inventoryValidation = validateInventory();
     if (!inventoryValidation.valid) {
-      const errorMessages = inventoryValidation.invalidItems.map(item => 
-        `${item.name}: ${item.error}`
-      ).join(", ");
+      const errorMessages = inventoryValidation.invalidItems.map(item => {
+        if (item.error === "insufficientQuantity") {
+          return `${item.name}: ${item.error.replace('{available}', item.available)}`;
+        }
+        return `${item.name}: ${item.error}`;
+      }).join(", ");
       
-      setError(`Inventory error: ${errorMessages}`);
+      setError(<><Translate textKey="inventoryError" />{errorMessages}</>);
       setLoading(false);
       return;
     }
@@ -245,10 +268,10 @@ const NewReceipt = () => {
       })
       .then(receiptId => {
         setSavedReceiptId(receiptId);
-        setSuccess('Receipt created successfully and inventory updated!');
+        setSuccess(<Translate textKey="receiptCreated" />);
       })
       .catch(error => {
-        setError('Failed to create receipt: ' + error.message);
+        setError(<><Translate textKey="failedToCreateReceipt" />{error.message}</>);
         console.error(error);
       })
       .finally(() => {
@@ -268,7 +291,7 @@ const NewReceipt = () => {
     <>
       <MainNavbar />
       <Container>
-        <h2 className="mb-4">Create New Receipt</h2>
+        <h2 className="mb-4"><Translate textKey="createNewReceipt" /></h2>
         
         {error && <Alert variant="danger">{error}</Alert>}
         {success && <Alert variant="success">{success}</Alert>}
@@ -288,18 +311,18 @@ const NewReceipt = () => {
                   <Row>
                     <Col md={6}>
                       <Form.Group className="mb-3">
-                        <Form.Label>Cashier Name</Form.Label>
+                        <Form.Label><Translate textKey="cashierName" /></Form.Label>
                         {shopData && shopData.cashierNames && shopData.cashierNames.length > 0 ? (
                           <Form.Select
                             value={cashierName}
                             onChange={(e) => setCashierName(e.target.value)}
                             required
                           >
-                            <option value="">Select Cashier</option>
+                            <option value=""><Translate textKey="selectCashier" /></option>
                             {shopData.cashierNames.map((name, index) => (
                               <option key={index} value={name}>{name}</option>
                             ))}
-                            <option value="custom">Other (Enter Manually)</option>
+                            <option value="custom"><Translate textKey="enterManually" /></option>
                           </Form.Select>
                         ) : (
                           <Form.Control
@@ -315,7 +338,7 @@ const NewReceipt = () => {
                           <Form.Control
                             type="text"
                             className="mt-2"
-                            placeholder="Enter cashier name"
+                            placeholder={<Translate textKey="enterCashierName" />}
                             value=""
                             onChange={(e) => setCashierName(e.target.value)}
                             required
@@ -325,17 +348,17 @@ const NewReceipt = () => {
                     </Col>
                     <Col md={6}>
                       <Form.Group className="mb-3">
-                        <Form.Label>Manager Name (Optional)</Form.Label>
+                        <Form.Label><Translate textKey="managerName" /></Form.Label>
                         {shopData && shopData.managerNames && shopData.managerNames.length > 0 ? (
                           <Form.Select
                             value={managerName}
                             onChange={(e) => setManagerName(e.target.value)}
                           >
-                            <option value="">Select Manager</option>
+                            <option value=""><Translate textKey="selectManager" /></option>
                             {shopData.managerNames.map((name, index) => (
                               <option key={index} value={name}>{name}</option>
                             ))}
-                            <option value="custom">Other (Enter Manually)</option>
+                            <option value="custom"><Translate textKey="enterManually" /></option>
                           </Form.Select>
                         ) : (
                           <Form.Control
@@ -350,7 +373,7 @@ const NewReceipt = () => {
                           <Form.Control
                             type="text"
                             className="mt-2"
-                            placeholder="Enter manager name"
+                            placeholder={<Translate textKey="enterManagerName" />}
                             value=""
                             onChange={(e) => setManagerName(e.target.value)}
                           />
@@ -360,21 +383,21 @@ const NewReceipt = () => {
                   </Row>
                   
                   <Form.Group className="mb-3">
-                    <Form.Label>Payment Method</Form.Label>
+                    <Form.Label><Translate textKey="paymentMethod" /></Form.Label>
                     <Form.Select
                       value={paymentMethod}
                       onChange={(e) => setPaymentMethod(e.target.value)}
                     >
-                      <option value="Cash">Cash</option>
-                      <option value="Credit Card">Credit Card</option>
-                      <option value="Debit Card">Debit Card</option>
-                      <option value="Bank Transfer">Bank Transfer</option>
-                      <option value="Mobile Payment">Mobile Payment</option>
+                      <option value="Cash"><Translate textKey="cash" /></option>
+                      <option value="Credit Card"><Translate textKey="creditCard" /></option>
+                      <option value="Debit Card"><Translate textKey="debitCard" /></option>
+                      <option value="Bank Transfer"><Translate textKey="bankTransfer" /></option>
+                      <option value="Mobile Payment"><Translate textKey="mobilePayment" /></option>
                     </Form.Select>
                   </Form.Group>
                   
                   <Form.Group className="mb-3">
-                    <Form.Label>Transaction ID</Form.Label>
+                    <Form.Label><Translate textKey="transactionId" /></Form.Label>
                     <Form.Control
                       type="text"
                       value={transactionId}
@@ -384,21 +407,20 @@ const NewReceipt = () => {
                   
                   <Card className="mb-3">
                     <Card.Body className="pb-0">
-                      <Card.Title className="mb-3">Barcode Scanner</Card.Title>
+                      <Card.Title className="mb-3"><Translate textKey="barcodeScanner" /></Card.Title>
                       <p className="text-muted mb-3">
-                        Scan product barcodes to automatically add items to the receipt. 
-                        Items with registered barcodes will be added automatically.
+                        <Translate textKey="barcodeScannerHelp" />
                       </p>
                     </Card.Body>
                   </Card>
                   
-                  <h5 className="mt-4 mb-3">Items</h5>
+                  <h5 className="mt-4 mb-3"><Translate textKey="items" /></h5>
                   
                   {items.map((item, index) => (
                     <Row key={index} className="mb-3 align-items-end">
                       <Col sm={5}>
                         <Form.Group>
-                          <Form.Label>Item Name</Form.Label>
+                          <Form.Label><Translate textKey="itemName" /></Form.Label>
                           <Form.Control
                             type="text"
                             required
@@ -415,7 +437,7 @@ const NewReceipt = () => {
                       </Col>
                       <Col sm={3}>
                         <Form.Group>
-                          <Form.Label>Price ($)</Form.Label>
+                          <Form.Label><Translate textKey="price" /></Form.Label>
                           <Form.Control
                             type="number"
                             step="0.01"
@@ -428,7 +450,7 @@ const NewReceipt = () => {
                       </Col>
                       <Col sm={2}>
                         <Form.Group>
-                          <Form.Label>Qty</Form.Label>
+                          <Form.Label><Translate textKey="qty" /></Form.Label>
                           <Form.Control
                             type="number"
                             min="1"
@@ -446,7 +468,7 @@ const NewReceipt = () => {
                           disabled={items.length <= 1}
                           className="mt-1"
                         >
-                          Remove
+                          <Translate textKey="remove" />
                         </Button>
                       </Col>
                     </Row>
@@ -457,7 +479,7 @@ const NewReceipt = () => {
                     className="mb-4" 
                     onClick={addItem}
                   >
-                    + Add Item
+                    <Translate textKey="addItem" />
                   </Button>
                   
                   <div className="d-flex mt-4">
@@ -467,7 +489,7 @@ const NewReceipt = () => {
                       disabled={loading || savedReceiptId}
                       className="me-2"
                     >
-                      Generate Receipt
+                      <Translate textKey="generateReceipt" />
                     </Button>
                     
                     {savedReceiptId && (
@@ -477,14 +499,14 @@ const NewReceipt = () => {
                           onClick={downloadPdf} 
                           className="me-2"
                         >
-                          Download PDF
+                          <Translate textKey="downloadPDF" />
                         </Button>
                         
                         <Button 
                           variant="outline-secondary" 
                           onClick={() => navigate(`/receipt/${savedReceiptId}`)}
                         >
-                          View Receipt
+                          <Translate textKey="viewReceipt" />
                         </Button>
                       </>
                     )}
@@ -499,25 +521,25 @@ const NewReceipt = () => {
               <Card.Body ref={pdfRef} className="p-4">
                 <div className="receipt-preview">
                   <div className="text-center mb-4">
-                    <h3>{shopData?.shopName || 'Shop Name'}</h3>
-                    <p className="mb-0">{shopData?.address || 'Shop Address'}</p>
+                    <h3>{translatedShopData?.shopName || 'Shop Name'}</h3>
+                    <p className="mb-0">{translatedShopData?.address || 'Shop Address'}</p>
                     <p>
-                      Tel: {shopData?.phoneNumbers ? 
-                        shopData.phoneNumbers[0] : 
-                        (shopData?.phoneNumber || 'Phone Number')}
+                      Tel: {translatedShopData?.phoneNumbers ? 
+                        translatedShopData.phoneNumbers[0] : 
+                        (translatedShopData?.phoneNumber || 'Phone Number')}
                     </p>
                   </div>
                   
                   <Row className="mb-3">
                     <Col xs={6}>
-                      <p className="mb-1"><strong>Receipt #:</strong> {transactionId}</p>
-                      <p className="mb-1"><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
-                      <p className="mb-1"><strong>Time:</strong> {new Date().toLocaleTimeString()}</p>
+                      <p className="mb-1"><strong><Translate textKey="receiptNumber" /></strong> {transactionId}</p>
+                      <p className="mb-1"><strong><Translate textKey="date" /></strong> {new Date().toLocaleDateString()}</p>
+                      <p className="mb-1"><strong><Translate textKey="time" /></strong> {new Date().toLocaleTimeString()}</p>
                     </Col>
                     <Col xs={6}>
-                      <p className="mb-1"><strong>Cashier:</strong> {cashierName || 'N/A'}</p>
-                      <p className="mb-1"><strong>Manager:</strong> {managerName || 'N/A'}</p>
-                      <p className="mb-1"><strong>Payment:</strong> {paymentMethod}</p>
+                      <p className="mb-1"><strong><Translate textKey="cashier" /></strong> {cashierName || 'N/A'}</p>
+                      <p className="mb-1"><strong><Translate textKey="manager" /></strong> {managerName || 'N/A'}</p>
+                      <p className="mb-1"><strong><Translate textKey="payment" /></strong> {paymentMethod}</p>
                     </Col>
                   </Row>
                   
@@ -526,14 +548,14 @@ const NewReceipt = () => {
                   <Table borderless className="receipt-table">
                     <thead>
                       <tr>
-                        <th>Item</th>
-                        <th className="text-end">Price</th>
-                        <th className="text-center">Qty</th>
-                        <th className="text-end">Total</th>
+                        <th><Translate textKey="itemName" /></th>
+                        <th className="text-end"><Translate textKey="price" /></th>
+                        <th className="text-center"><Translate textKey="qty" /></th>
+                        <th className="text-end"><Translate textKey="total" /></th>
                       </tr>
                     </thead>
                     <tbody>
-                      {items.map((item, index) => (
+                      {translatedItems.map((item, index) => (
                         <tr key={index}>
                           <td>{item.name || 'Item Name'}</td>
                           <td className="text-end">${parseFloat(item.price || 0).toFixed(2)}</td>
@@ -544,7 +566,7 @@ const NewReceipt = () => {
                     </tbody>
                     <tfoot>
                       <tr>
-                        <th colSpan="3" className="text-end">Total:</th>
+                        <th colSpan="3" className="text-end"><Translate textKey="total" /></th>
                         <th className="text-end">${calculateTotal(items)}</th>
                       </tr>
                     </tfoot>
@@ -553,7 +575,7 @@ const NewReceipt = () => {
                   <hr />
                   
                   <div className="text-center mt-4">
-                    <p>Thank you for your business!</p>
+                    <p><Translate textKey="thankYou" /></p>
                   </div>
                 </div>
               </Card.Body>
