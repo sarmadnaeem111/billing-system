@@ -2,9 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Container, Card, Form, Button, Row, Col, Alert, ListGroup } from 'react-bootstrap';
 import { useAuth } from '../contexts/AuthContext';
 import MainNavbar from '../components/Navbar';
+import { Translate, useTranslatedAttribute } from '../utils';
 
 const Settings = () => {
   const { shopData, updateShopData } = useAuth();
+  
+  // Get translations for attributes
+  const getTranslatedAttr = useTranslatedAttribute();
   
   // Basic shop info
   const [shopName, setShopName] = useState('');
@@ -52,7 +56,7 @@ const Settings = () => {
     
     // Check if phone number already exists
     if (phoneNumbers.includes(newPhoneNumber.trim())) {
-      setError('This phone number already exists.');
+      setError(getTranslatedAttr('phoneNumberExists'));
       setTimeout(() => setError(''), 3000);
       return;
     }
@@ -74,7 +78,7 @@ const Settings = () => {
     
     // Check if name already exists
     if (cashierNames.includes(newCashierName.trim())) {
-      setError('This cashier name already exists.');
+      setError(getTranslatedAttr('cashierNameExists'));
       setTimeout(() => setError(''), 3000);
       return;
     }
@@ -96,7 +100,7 @@ const Settings = () => {
     
     // Check if name already exists
     if (managerNames.includes(newManagerName.trim())) {
-      setError('This manager name already exists.');
+      setError(getTranslatedAttr('managerNameExists'));
       setTimeout(() => setError(''), 3000);
       return;
     }
@@ -118,7 +122,7 @@ const Settings = () => {
     
     // Validate shop name
     if (!shopName.trim()) {
-      setError('Shop name is required.');
+      setError(getTranslatedAttr('shopNameRequired'));
       return;
     }
     
@@ -139,11 +143,11 @@ const Settings = () => {
     // Update shop data in Firestore
     updateShopData(updatedData)
       .then(() => {
-        setSuccess('Settings updated successfully.');
+        setSuccess(getTranslatedAttr('settingsUpdated'));
         setTimeout(() => setSuccess(''), 5000);
       })
       .catch(error => {
-        setError('Failed to update settings: ' + error.message);
+        setError(getTranslatedAttr('failedToUpdateSettings') + error.message);
         console.error('Error updating settings:', error);
       })
       .finally(() => {
@@ -155,7 +159,7 @@ const Settings = () => {
     <>
       <MainNavbar />
       <Container>
-        <h2 className="mb-4">Shop Settings</h2>
+        <h2 className="mb-4"><Translate textKey="shopSettings" /></h2>
         
         {error && <Alert variant="danger">{error}</Alert>}
         {success && <Alert variant="success">{success}</Alert>}
@@ -163,51 +167,51 @@ const Settings = () => {
         <Card className="mb-4">
           <Card.Body>
             <Form onSubmit={handleSubmit}>
-              <h4 className="mb-3">Basic Information</h4>
+              <h4 className="mb-3"><Translate textKey="basicInformation" /></h4>
               <Row>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Shop Name</Form.Label>
+                    <Form.Label><Translate textKey="shopName" /></Form.Label>
                     <Form.Control
                       type="text"
                       value={shopName}
                       onChange={(e) => setShopName(e.target.value)}
-                      placeholder="Enter shop name"
+                      placeholder={getTranslatedAttr("enterShopName")}
                       required
                     />
                   </Form.Group>
                 </Col>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Address</Form.Label>
+                    <Form.Label><Translate textKey="address" /></Form.Label>
                     <Form.Control
                       type="text"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      placeholder="Enter shop address"
+                      placeholder={getTranslatedAttr("enterShopAddress")}
                     />
                   </Form.Group>
                 </Col>
               </Row>
               
-              <h4 className="mb-3 mt-4">Phone Numbers</h4>
+              <h4 className="mb-3 mt-4"><Translate textKey="phoneNumbers" /></h4>
               <Row>
                 <Col md={8}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Add New Phone Number</Form.Label>
+                    <Form.Label><Translate textKey="addNewPhoneNumber" /></Form.Label>
                     <div className="d-flex">
                       <Form.Control
                         type="text"
                         value={newPhoneNumber}
                         onChange={(e) => setNewPhoneNumber(e.target.value)}
-                        placeholder="Enter phone number"
+                        placeholder={getTranslatedAttr("enterPhoneNumber")}
                         className="me-2"
                       />
                       <Button 
                         variant="outline-primary" 
                         onClick={handleAddPhoneNumber}
                       >
-                        Add
+                        <Translate textKey="add" />
                       </Button>
                     </div>
                   </Form.Group>
@@ -224,32 +228,32 @@ const Settings = () => {
                         size="sm"
                         onClick={() => handleRemovePhoneNumber(index)}
                       >
-                        Remove
+                        <Translate textKey="remove" />
                       </Button>
                     </ListGroup.Item>
                   ))}
                 </ListGroup>
               )}
               
-              <h4 className="mb-3 mt-4">Staff Information</h4>
+              <h4 className="mb-3 mt-4"><Translate textKey="staffInformation" /></h4>
               
               <Row>
                 <Col md={6}>
-                  <h5 className="mb-2">Cashier Names</h5>
+                  <h5 className="mb-2"><Translate textKey="cashierNames" /></h5>
                   <Form.Group className="mb-3">
                     <div className="d-flex">
                       <Form.Control
                         type="text"
                         value={newCashierName}
                         onChange={(e) => setNewCashierName(e.target.value)}
-                        placeholder="Enter cashier name"
+                        placeholder={getTranslatedAttr("enterCashierName")}
                         className="me-2"
                       />
                       <Button 
                         variant="outline-primary" 
                         onClick={handleAddCashierName}
                       >
-                        Add
+                        <Translate textKey="add" />
                       </Button>
                     </div>
                   </Form.Group>
@@ -264,7 +268,7 @@ const Settings = () => {
                             size="sm"
                             onClick={() => handleRemoveCashierName(index)}
                           >
-                            Remove
+                            <Translate textKey="remove" />
                           </Button>
                         </ListGroup.Item>
                       ))}
@@ -273,21 +277,21 @@ const Settings = () => {
                 </Col>
                 
                 <Col md={6}>
-                  <h5 className="mb-2">Manager Names</h5>
+                  <h5 className="mb-2"><Translate textKey="managerNames" /></h5>
                   <Form.Group className="mb-3">
                     <div className="d-flex">
                       <Form.Control
                         type="text"
                         value={newManagerName}
                         onChange={(e) => setNewManagerName(e.target.value)}
-                        placeholder="Enter manager name"
+                        placeholder={getTranslatedAttr("enterManagerName")}
                         className="me-2"
                       />
                       <Button 
                         variant="outline-primary" 
                         onClick={handleAddManagerName}
                       >
-                        Add
+                        <Translate textKey="add" />
                       </Button>
                     </div>
                   </Form.Group>
@@ -302,7 +306,7 @@ const Settings = () => {
                             size="sm"
                             onClick={() => handleRemoveManagerName(index)}
                           >
-                            Remove
+                            <Translate textKey="remove" />
                           </Button>
                         </ListGroup.Item>
                       ))}
@@ -311,14 +315,13 @@ const Settings = () => {
                 </Col>
               </Row>
               
-              <div className="d-flex mt-4">
+              <div className="d-flex justify-content-end mt-4">
                 <Button 
                   variant="primary" 
                   type="submit" 
                   disabled={loading}
-                  className="me-2"
                 >
-                  {loading ? 'Saving...' : 'Save Settings'}
+                  {loading ? <Translate textKey="saving" /> : <Translate textKey="save" />}
                 </Button>
               </div>
             </Form>
