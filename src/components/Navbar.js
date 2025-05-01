@@ -2,9 +2,13 @@ import React from 'react';
 import { Navbar, Nav, Container, Button, NavDropdown } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import LanguageToggle from './LanguageToggle';
+import Translate from './Translate';
 
 const MainNavbar = () => {
   const { currentUser, logout, shopData } = useAuth();
+  const { language } = useLanguage();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -28,36 +32,40 @@ const MainNavbar = () => {
           <Nav className="me-auto">
             {currentUser && (
               <>
-                <Nav.Link as={Link} to="/dashboard">Dashboard</Nav.Link>
-                <Nav.Link as={Link} to="/new-receipt">New Receipt</Nav.Link>
-                <Nav.Link as={Link} to="/receipts">Receipts</Nav.Link>
-                <Nav.Link as={Link} to="/stock">Inventory</Nav.Link>
+                <Nav.Link as={Link} to="/dashboard"><Translate textKey="dashboard" /></Nav.Link>
+                <Nav.Link as={Link} to="/new-receipt"><Translate textKey="newReceipt" /></Nav.Link>
+                <Nav.Link as={Link} to="/receipts"><Translate textKey="receipts" /></Nav.Link>
+                <Nav.Link as={Link} to="/stock"><Translate textKey="inventory" /></Nav.Link>
                 
                 {/* Employee Management Dropdown */}
-                <NavDropdown title="Employees" id="employee-nav-dropdown">
-                  <NavDropdown.Item as={Link} to="/employees">View Employees</NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/add-employee">Add Employee</NavDropdown.Item>
+                <NavDropdown title={<Translate textKey="employees" />} id="employee-nav-dropdown">
+                  <NavDropdown.Item as={Link} to="/employees"><Translate textKey="viewEmployees" /></NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/add-employee"><Translate textKey="addEmployee" /></NavDropdown.Item>
                 </NavDropdown>
                 
                 {/* Attendance Management Dropdown */}
-                <NavDropdown title="Attendance" id="attendance-nav-dropdown">
-                  <NavDropdown.Item as={Link} to="/attendance">View Attendance</NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/mark-attendance">Mark Attendance</NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/attendance-report">Attendance Report</NavDropdown.Item>
+                <NavDropdown title={<Translate textKey="attendance" />} id="attendance-nav-dropdown">
+                  <NavDropdown.Item as={Link} to="/attendance"><Translate textKey="viewAttendance" /></NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/mark-attendance"><Translate textKey="markAttendance" /></NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/attendance-report"><Translate textKey="attendanceReport" /></NavDropdown.Item>
                 </NavDropdown>
                 
                 {/* Settings */}
-                <Nav.Link as={Link} to="/settings">Settings</Nav.Link>
+                <Nav.Link as={Link} to="/settings"><Translate textKey="settings" /></Nav.Link>
               </>
             )}
           </Nav>
           <Nav>
             {currentUser ? (
-              <Button variant="outline-light" onClick={handleLogout}>Logout</Button>
+              <>
+                <Button variant="outline-light" onClick={handleLogout}><Translate textKey="logout" /></Button>
+                <LanguageToggle />
+              </>
             ) : (
               <>
-                <Nav.Link as={Link} to="/login">Login</Nav.Link>
-                <Nav.Link as={Link} to="/register">Register</Nav.Link>
+                <Nav.Link as={Link} to="/login"><Translate textKey="login" /></Nav.Link>
+                <Nav.Link as={Link} to="/register"><Translate textKey="register" /></Nav.Link>
+                <LanguageToggle />
               </>
             )}
           </Nav>
