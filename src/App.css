@@ -84,3 +84,46 @@ body {
     font-size: 0.9rem;
   }
 }
+
+/* RTL language support */
+.rtl {
+  direction: rtl;
+  text-align: right;
+}
+
+.rtl .nav-link, 
+.rtl .navbar-brand, 
+.rtl .dropdown-item {
+  text-align: right;
+}
+
+.rtl .ms-2 {
+  margin-right: 0.5rem !important;
+  margin-left: 0 !important;
+}
+
+.rtl .me-2 {
+  margin-left: 0.5rem !important;
+  margin-right: 0 !important;
+}
+
+.rtl .me-auto {
+  margin-left: auto !important;
+  margin-right: 0 !important;
+}
+
+.rtl .ms-auto {
+  margin-right: auto !important;
+  margin-left: 0 !important;
+}
+
+.rtl .dropdown-menu {
+  text-align: right;
+  left: auto;
+  right: 0;
+}
+
+/* Flip Bootstrap icons in RTL mode */
+.rtl .bi {
+  transform: scaleX(-1);
+}
