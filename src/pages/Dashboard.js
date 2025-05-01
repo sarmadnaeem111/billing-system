@@ -5,6 +5,8 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import MainNavbar from '../components/Navbar';
+import { Translate, TranslateData } from '../utils';
+import useTranslatedData from '../hooks/useTranslatedData';
 
 const Dashboard = () => {
   const { currentUser, shopData } = useAuth();
@@ -14,6 +16,13 @@ const Dashboard = () => {
   const [todayAttendance, setTodayAttendance] = useState({ present: 0, absent: 0, total: 0 });
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Translate shop data
+  const translatedShopData = useTranslatedData(shopData);
+  // Translate recent receipts
+  const translatedReceipts = useTranslatedData(recentReceipts);
+  // Translate attendance data
+  const translatedAttendance = useTranslatedData(todayAttendance);
 
   useEffect(() => {
     // Convert to non-async function
@@ -111,15 +120,15 @@ const Dashboard = () => {
     <>
       <MainNavbar />
       <Container className="pb-4">
-        <h2 className="my-3">Dashboard</h2>
+        <h2 className="my-3"><Translate textKey="dashboard" /></h2>
         
         {shopData && (
           <Card className="mb-4 shadow-sm">
             <Card.Body>
-              <Card.Title as="h3">{shopData.shopName}</Card.Title>
+              <Card.Title as="h3">{translatedShopData.shopName}</Card.Title>
               <Card.Text>
-                <strong>Address:</strong> {shopData.address}<br />
-                <strong>Contact:</strong> {shopData.phoneNumber}
+                <strong><Translate textKey="address" />:</strong> {translatedShopData.address}<br />
+                <strong><Translate textKey="phone" />:</strong> {translatedShopData.phoneNumber}
               </Card.Text>
             </Card.Body>
           </Card>
@@ -129,9 +138,20 @@ const Dashboard = () => {
           <Col xs={12} md={6} lg={4}>
             <Card className="h-100 shadow-sm">
               <Card.Body className="d-flex flex-column">
-                <Card.Title>Receipts</Card.Title>
+                <Card.Title><Translate textKey="receipts" /></Card.Title>
                 <Card.Text className="mb-4">
-                  You have generated {receiptCount} receipt(s) so far.
+                  <TranslateData 
+                    data={{
+                      message: "You have generated {count} receipt(s) so far.",
+                      count: receiptCount
+                    }}
+                  >
+                    {(data) => (
+                      <>
+                        {data.message.replace('{count}', data.count)}
+                      </>
+                    )}
+                  </TranslateData>
                 </Card.Text>
                 <div className="mt-auto">
                   <Stack direction="horizontal" gap={2} className="d-flex flex-wrap">
@@ -140,14 +160,14 @@ const Dashboard = () => {
                       onClick={() => navigate('/receipts')}
                       className="flex-grow-1"
                     >
-                      View All
+                      <Translate textKey="view" />
                     </Button>
                     <Button 
                       variant="success" 
                       onClick={() => navigate('/new-receipt')}
                       className="flex-grow-1"
                     >
-                      Create New
+                      <Translate textKey="add" />
                     </Button>
                   </Stack>
                 </div>
@@ -158,17 +178,31 @@ const Dashboard = () => {
           <Col xs={12} md={6} lg={4}>
             <Card className="h-100 shadow-sm">
               <Card.Body className="d-flex flex-column">
-                <Card.Title>Employees</Card.Title>
+                <Card.Title><Translate textKey="employees" /></Card.Title>
                 <Card.Text className="mb-4">
-                  You have {employeeCount} employee(s) registered.
+                  <TranslateData 
+                    data={{
+                      message: "You have {count} employee(s) registered.",
+                      count: employeeCount
+                    }}
+                  >
+                    {(data) => (
+                      <>
+                        {data.message.replace('{count}', data.count)}
+                      </>
+                    )}
+                  </TranslateData>
+                  
                   {todayAttendance.total > 0 && (
                     <div className="mt-2">
-                      <div>Today's Attendance:</div>
+                      <div><Translate textKey="todaysAttendance" fallback="Today's Attendance:" /></div>
                       <div className="d-flex justify-content-between pe-5 mt-1">
-                        <span>Present:</span> <span>{todayAttendance.present}</span>
+                        <span><Translate textKey="present" fallback="Present" />:</span> 
+                        <span>{translatedAttendance.present}</span>
                       </div>
                       <div className="d-flex justify-content-between pe-5">
-                        <span>Absent:</span> <span>{todayAttendance.absent}</span>
+                        <span><Translate textKey="absent" fallback="Absent" />:</span> 
+                        <span>{translatedAttendance.absent}</span>
                       </div>
                     </div>
                   )}
@@ -180,14 +214,14 @@ const Dashboard = () => {
                       onClick={() => navigate('/employees')}
                       className="flex-grow-1"
                     >
-                      View Employees
+                      <Translate textKey="viewEmployees" />
                     </Button>
                     <Button 
                       variant="success" 
                       onClick={() => navigate('/mark-attendance')}
                       className="flex-grow-1"
                     >
-                      Mark Attendance
+                      <Translate textKey="markAttendance" />
                     </Button>
                   </Stack>
                 </div>
@@ -198,20 +232,20 @@ const Dashboard = () => {
           <Col xs={12} lg={4}>
             <Card className="h-100 shadow-sm">
               <Card.Body>
-                <Card.Title>Recent Receipts</Card.Title>
+                <Card.Title><Translate textKey="recentReceipts" fallback="Recent Receipts" /></Card.Title>
                 {recentReceipts.length > 0 ? (
                   <div className="table-responsive small-table">
                     <table className="table table-sm table-hover">
                       <thead>
                         <tr>
-                          <th>Date</th>
-                          <th>Receipt ID</th>
-                          <th>Total</th>
-                          <th>Action</th>
+                          <th><Translate textKey="date" /></th>
+                          <th><Translate textKey="receiptId" fallback="Receipt ID" /></th>
+                          <th><Translate textKey="total" /></th>
+                          <th><Translate textKey="action" /></th>
                         </tr>
                       </thead>
                       <tbody>
-                        {recentReceipts.map(receipt => (
+                        {translatedReceipts.map(receipt => (
                           <tr key={receipt.id}>
                             <td>{new Date(receipt.timestamp).toLocaleDateString()}</td>
                             <td className="text-truncate" style={{maxWidth: "80px"}}>{receipt.id.substring(0, 8)}</td>
@@ -222,7 +256,7 @@ const Dashboard = () => {
                                 variant="outline-primary"
                                 onClick={() => navigate(`/receipt/${receipt.id}`)}
                               >
-                                View
+                                <Translate textKey="view" />
                               </Button>
                             </td>
                           </tr>
@@ -232,7 +266,8 @@ const Dashboard = () => {
                   </div>
                 ) : (
                   <p className="text-center mt-4">
-                    {loading ? "Loading..." : "No receipts yet. Start creating receipts!"}
+                    {loading ? <Translate textKey="loading" fallback="Loading..." /> : 
+                      <Translate textKey="noReceiptsYet" fallback="No receipts yet. Start creating receipts!" />}
                   </p>
                 )}
               </Card.Body>
@@ -248,11 +283,7 @@ const Dashboard = () => {
           }
           .table-responsive.small-table td, 
           .table-responsive.small-table th {
-            padding: 0.5rem 0.25rem;
-          }
-          .small-table .btn-sm {
-            padding: 0.15rem 0.4rem;
-            font-size: 0.75rem;
+            padding: 0.3rem;
           }
         }
       `}</style>
