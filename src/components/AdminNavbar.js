@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Navbar, Nav, Container, Button, Offcanvas } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAdmin } from '../contexts/AdminContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import LanguageToggle from './LanguageToggle';
+import Translate from './Translate';
 
 const AdminNavbar = () => {
   const { adminUser, adminLogout } = useAdmin();
@@ -39,13 +42,14 @@ const AdminNavbar = () => {
             className="d-lg-none"
             onClick={handleShow}
           >
-            <i className="bi bi-list"></i> Menu
+            <i className="bi bi-list"></i> <Translate textKey="menu" fallback="Menu" />
           </Button>
           
-          <div className="d-none d-lg-flex">
+          <div className="d-none d-lg-flex align-items-center">
+            <LanguageToggle />
             {adminUser && (
-              <Button variant="outline-light" onClick={handleLogout}>
-                Logout
+              <Button variant="outline-light" onClick={handleLogout} className="ms-2">
+                <Translate textKey="logout" />
               </Button>
             )}
           </div>
@@ -55,7 +59,7 @@ const AdminNavbar = () => {
       {/* Sidebar for mobile view */}
       <Offcanvas show={showSidebar} onHide={handleClose} className="bg-dark text-white" placement="start">
         <Offcanvas.Header closeButton closeVariant="white">
-          <Offcanvas.Title>Admin Panel</Offcanvas.Title>
+          <Offcanvas.Title><Translate textKey="adminPanel" fallback="Admin Panel" /></Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body>
           <Nav className="flex-column">
@@ -65,7 +69,7 @@ const AdminNavbar = () => {
               className={isActive('/admin/dashboard') ? 'active' : ''}
               onClick={handleClose}
             >
-              Dashboard
+              <Translate textKey="dashboard" />
             </Nav.Link>
             <Nav.Link 
               as={Link} 
@@ -73,7 +77,7 @@ const AdminNavbar = () => {
               className={isActive('/admin/pending-users') ? 'active' : ''}
               onClick={handleClose}
             >
-              Pending Approvals
+              <Translate textKey="pendingApprovals" fallback="Pending Approvals" />
             </Nav.Link>
             <Nav.Link 
               as={Link} 
@@ -81,19 +85,22 @@ const AdminNavbar = () => {
               className={isActive('/admin/users') ? 'active' : ''}
               onClick={handleClose}
             >
-              Manage Users
+              <Translate textKey="manageUsers" fallback="Manage Users" />
             </Nav.Link>
             <hr className="bg-secondary" />
-            <Button 
-              variant="outline-danger" 
-              onClick={() => {
-                handleLogout();
-                handleClose();
-              }}
-              className="mt-3"
-            >
-              Logout
-            </Button>
+            <div className="d-flex mt-3">
+              <LanguageToggle />
+              <Button 
+                variant="outline-danger" 
+                onClick={() => {
+                  handleLogout();
+                  handleClose();
+                }}
+                className="ms-2"
+              >
+                <Translate textKey="logout" />
+              </Button>
+            </div>
           </Nav>
         </Offcanvas.Body>
       </Offcanvas>
@@ -106,21 +113,21 @@ const AdminNavbar = () => {
             to="/admin/dashboard" 
             className={`rounded py-2 ${isActive('/admin/dashboard') ? 'active bg-primary text-white' : ''}`}
           >
-            <i className="bi bi-speedometer2 me-2"></i> Dashboard
+            <i className="bi bi-speedometer2 me-2"></i> <Translate textKey="dashboard" />
           </Nav.Link>
           <Nav.Link 
             as={Link} 
             to="/admin/pending-users" 
             className={`rounded py-2 ${isActive('/admin/pending-users') ? 'active bg-primary text-white' : ''}`}
           >
-            <i className="bi bi-person-plus me-2"></i> Pending Approvals
+            <i className="bi bi-person-plus me-2"></i> <Translate textKey="pendingApprovals" fallback="Pending Approvals" />
           </Nav.Link>
           <Nav.Link 
             as={Link} 
             to="/admin/users" 
             className={`rounded py-2 ${isActive('/admin/users') ? 'active bg-primary text-white' : ''}`}
           >
-            <i className="bi bi-people me-2"></i> Manage Users
+            <i className="bi bi-people me-2"></i> <Translate textKey="manageUsers" fallback="Manage Users" />
           </Nav.Link>
         </Nav>
       </div>
