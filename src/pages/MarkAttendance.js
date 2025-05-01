@@ -14,10 +14,14 @@ import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import MainNavbar from '../components/Navbar';
 import './MarkAttendance.css'; // Import the CSS for responsive styles
+import { Translate, useTranslatedAttribute } from '../utils';
 
 const MarkAttendance = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  
+  // Get translations for attributes
+  const getTranslatedAttr = useTranslatedAttribute();
   
   const [employees, setEmployees] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
@@ -49,12 +53,12 @@ const MarkAttendance = () => {
         
         setEmployees(employeesList);
       } catch (err) {
-        setError('Failed to load employees. Please try again.');
+        setError(getTranslatedAttr('failedToLoadEmployees'));
       }
     };
     
     fetchEmployees();
-  }, [currentUser]);
+  }, [currentUser, getTranslatedAttr]);
   
   // Check for existing attendance records for this date
   useEffect(() => {
@@ -81,56 +85,40 @@ const MarkAttendance = () => {
           }))
           .filter(record => record.date === selectedDate);
         
-        // If existing attendance records found, populate the form with them
-        if (existingAttendance.length > 0) {
-          const attendanceMap = {};
-          existingAttendance.forEach(record => {
-            attendanceMap[record.employeeId] = record;
-          });
+        // Initialize attendance data for all employees
+        const attendanceForAllEmployees = employees.map(employee => {
+          // Check if attendance record exists for this employee
+          const existingRecord = existingAttendance.find(
+            record => record.employeeId === employee.id
+          );
           
-          const initialAttendanceData = employees.map(employee => {
-            const existingRecord = attendanceMap[employee.id];
-            return {
-              employeeId: employee.id,
-              name: employee.name,
-              status: existingRecord ? existingRecord.status : 'present',
-              checkIn: existingRecord ? existingRecord.checkIn : '',
-              checkOut: existingRecord ? existingRecord.checkOut : '',
-              notes: existingRecord ? existingRecord.notes : '',
-              recordId: existingRecord ? existingRecord.id : null
-            };
-          });
-          
-          setAttendanceData(initialAttendanceData);
-        } else {
-          // If no existing records, create default entries for all employees
-          const defaultAttendanceData = employees.map(employee => ({
+          return {
             employeeId: employee.id,
-            name: employee.name,
-            status: 'present',
-            checkIn: '',
-            checkOut: '',
-            notes: '',
-            recordId: null
-          }));
-          
-          setAttendanceData(defaultAttendanceData);
-        }
+            employeeName: employee.name,
+            status: existingRecord ? existingRecord.status : 'present',
+            checkIn: existingRecord ? existingRecord.checkIn : '',
+            checkOut: existingRecord ? existingRecord.checkOut : '',
+            notes: existingRecord ? existingRecord.notes : '',
+            recordId: existingRecord ? existingRecord.id : null
+          };
+        });
         
+        setAttendanceData(attendanceForAllEmployees);
         setLoading(false);
       } catch (err) {
-        setError('Failed to load attendance data. Please try again.');
+        console.error('Error checking existing attendance:', err);
+        setError(getTranslatedAttr('failedToLoadAttendance'));
         setLoading(false);
       }
     };
     
     checkExistingAttendance();
-  }, [currentUser, employees, selectedDate]);
+  }, [currentUser, employees, selectedDate, getTranslatedAttr]);
   
-  // Handle attendance status change
-  const handleStatusChange = (index, status) => {
+  // Handle status change
+  const handleStatusChange = (index, value) => {
     const updatedData = [...attendanceData];
-    updatedData[index].status = status;
+    updatedData[index].status = value;
     setAttendanceData(updatedData);
   };
   
@@ -183,7 +171,7 @@ const MarkAttendance = () => {
       
       await Promise.all(batch);
       
-      setSuccess('Attendance marked successfully!');
+      setSuccess(getTranslatedAttr('attendanceMarkedSuccess'));
       setSubmitting(false);
       
       // Redirect to attendance view after 1.5 seconds
@@ -191,7 +179,7 @@ const MarkAttendance = () => {
         navigate('/attendance');
       }, 1500);
     } catch (err) {
-      setError('Failed to submit attendance. Please try again.');
+      setError(getTranslatedAttr('failedToSubmitAttendance'));
       setSubmitting(false);
     }
   };
@@ -205,112 +193,112 @@ const MarkAttendance = () => {
     <>
       <MainNavbar />
       <Container>
-        <h2 className="mb-4">Mark Attendance</h2>
+        <h2 className="mb-4"><Translate textKey="markAttendance" /></h2>
         
         {error && <Alert variant="danger">{error}</Alert>}
         {success && <Alert variant="success">{success}</Alert>}
         
         <Card className="mb-4">
           <Card.Body>
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3 attendance-date-picker">
-                  <Form.Label>Select Date</Form.Label>
-                  <Form.Control
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => handleDateChange(e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
+            <Form.Group className="mb-3">
+              <Form.Label><Translate textKey="selectDate" /></Form.Label>
+              <Form.Control
+                type="date"
+                value={selectedDate}
+                onChange={(e) => handleDateChange(e.target.value)}
+              />
+            </Form.Group>
           </Card.Body>
         </Card>
         
-        <Card>
-          <Card.Body>
-            {loading ? (
-              <p className="text-center">Loading employee data...</p>
-            ) : attendanceData.length > 0 ? (
-              <>
-                <div className="mark-attendance-table-container">
-                  <Table striped hover className="mark-attendance-table">
-                    <thead>
-                      <tr>
-                        <th>Employee</th>
-                        <th>Status</th>
-                        <th>Check In</th>
-                        <th>Check Out</th>
-                        <th>Notes</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {attendanceData.map((record, index) => (
-                        <tr key={record.employeeId}>
-                          <td data-label="Employee">{record.name}</td>
-                          <td data-label="Status">
-                            <Form.Select
-                              value={record.status}
-                              onChange={(e) => handleStatusChange(index, e.target.value)}
-                              className="form-select-sm"
-                            >
-                              <option value="present">Present</option>
-                              <option value="absent">Absent</option>
-                              <option value="half-day">Half Day</option>
-                              <option value="leave">Leave</option>
-                            </Form.Select>
-                          </td>
-                          <td data-label="Check In">
-                            <Form.Control
-                              type="time"
-                              value={record.checkIn}
-                              onChange={(e) => handleTimeChange(index, 'checkIn', e.target.value)}
-                              disabled={record.status === 'absent' || record.status === 'leave'}
-                              size="sm"
-                            />
-                          </td>
-                          <td data-label="Check Out">
-                            <Form.Control
-                              type="time"
-                              value={record.checkOut}
-                              onChange={(e) => handleTimeChange(index, 'checkOut', e.target.value)}
-                              disabled={record.status === 'absent' || record.status === 'leave'}
-                              size="sm"
-                            />
-                          </td>
-                          <td data-label="Notes">
-                            <Form.Control
-                              type="text"
-                              value={record.notes}
-                              onChange={(e) => handleNotesChange(index, e.target.value)}
-                              placeholder="Add notes"
-                              size="sm"
-                            />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </div>
-                
-                <div className="d-flex justify-content-between mt-3 attendance-actions">
-                  <Button variant="secondary" onClick={() => navigate('/attendance')}>
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="primary"
-                    onClick={handleSubmit}
-                    disabled={submitting}
-                  >
-                    {submitting ? 'Submitting...' : 'Save Attendance'}
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <p className="text-center">No employees found. Please add employees first.</p>
-            )}
-          </Card.Body>
-        </Card>
+        {loading ? (
+          <div className="text-center p-3">
+            <p><Translate textKey="loadingEmployees" /></p>
+          </div>
+        ) : attendanceData.length === 0 ? (
+          <div className="text-center p-3">
+            <p><Translate textKey="noEmployeesFound" /></p>
+          </div>
+        ) : (
+          <>
+            <div className="table-responsive attendance-mark-table-container">
+              <Table responsive="sm" className="attendance-mark-table">
+                <thead>
+                  <tr>
+                    <th><Translate textKey="employee" /></th>
+                    <th><Translate textKey="status" /></th>
+                    <th><Translate textKey="checkIn" /></th>
+                    <th><Translate textKey="checkOut" /></th>
+                    <th><Translate textKey="notes" /></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {attendanceData.map((record, index) => (
+                    <tr key={record.employeeId}>
+                      <td data-label={getTranslatedAttr("employee")}>{record.employeeName}</td>
+                      <td data-label={getTranslatedAttr("status")}>
+                        <Form.Select
+                          value={record.status}
+                          onChange={(e) => handleStatusChange(index, e.target.value)}
+                        >
+                          <option value="present"><Translate textKey="present" /></option>
+                          <option value="absent"><Translate textKey="absent" /></option>
+                          <option value="half-day"><Translate textKey="halfDay" /></option>
+                          <option value="leave"><Translate textKey="onLeave" /></option>
+                        </Form.Select>
+                      </td>
+                      <td data-label={getTranslatedAttr("checkIn")}>
+                        <Form.Control
+                          type="time"
+                          value={record.checkIn}
+                          onChange={(e) => handleTimeChange(index, 'checkIn', e.target.value)}
+                          disabled={record.status === 'absent' || record.status === 'leave'}
+                        />
+                      </td>
+                      <td data-label={getTranslatedAttr("checkOut")}>
+                        <Form.Control
+                          type="time"
+                          value={record.checkOut}
+                          onChange={(e) => handleTimeChange(index, 'checkOut', e.target.value)}
+                          disabled={record.status === 'absent' || record.status === 'leave'}
+                        />
+                      </td>
+                      <td data-label={getTranslatedAttr("notes")}>
+                        <Form.Control
+                          as="textarea"
+                          rows={2}
+                          value={record.notes}
+                          onChange={(e) => handleNotesChange(index, e.target.value)}
+                          placeholder={getTranslatedAttr("optionalNotes")}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </div>
+            
+            <div className="d-flex mt-4">
+              <Button 
+                variant="secondary" 
+                onClick={() => navigate('/attendance')}
+                className="me-2"
+              >
+                <Translate textKey="cancel" />
+              </Button>
+              <Button 
+                variant="primary" 
+                onClick={handleSubmit}
+                disabled={submitting}
+              >
+                {submitting ? 
+                  <Translate textKey="submitting" /> : 
+                  <Translate textKey="submitAttendance" />
+                }
+              </Button>
+            </div>
+          </>
+        )}
       </Container>
     </>
   );
