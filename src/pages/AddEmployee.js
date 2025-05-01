@@ -5,10 +5,14 @@ import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import MainNavbar from '../components/Navbar';
+import { Translate, useTranslatedAttribute } from '../utils';
 
 const AddEmployee = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  
+  // Get translations for attributes
+  const getTranslatedAttr = useTranslatedAttribute();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -35,7 +39,7 @@ const AddEmployee = () => {
     e.preventDefault();
     
     if (!formData.name || !formData.position || !formData.contact) {
-      setError('Name, position, and contact number are required');
+      setError(getTranslatedAttr('requiredFieldsError'));
       return;
     }
     
@@ -55,7 +59,7 @@ const AddEmployee = () => {
       navigate('/employees');
     } catch (err) {
       console.error('Error adding employee:', err);
-      setError('Failed to add employee. Please try again.');
+      setError(getTranslatedAttr('failedToAddEmployee'));
       setLoading(false);
     }
   };
@@ -64,7 +68,7 @@ const AddEmployee = () => {
     <>
       <MainNavbar />
       <Container>
-        <h2 className="mb-4">Add New Employee</h2>
+        <h2 className="mb-4"><Translate textKey="addNewEmployee" /></h2>
         
         {error && <Alert variant="danger">{error}</Alert>}
         
@@ -72,7 +76,7 @@ const AddEmployee = () => {
           <Card.Body>
             <Form onSubmit={handleSubmit}>
               <Form.Group className="mb-3">
-                <Form.Label>Name*</Form.Label>
+                <Form.Label><Translate textKey="nameRequired" /></Form.Label>
                 <Form.Control
                   type="text"
                   name="name"
@@ -83,7 +87,7 @@ const AddEmployee = () => {
               </Form.Group>
               
               <Form.Group className="mb-3">
-                <Form.Label>Position*</Form.Label>
+                <Form.Label><Translate textKey="positionRequired" /></Form.Label>
                 <Form.Control
                   type="text"
                   name="position"
@@ -94,7 +98,7 @@ const AddEmployee = () => {
               </Form.Group>
               
               <Form.Group className="mb-3">
-                <Form.Label>Contact Number*</Form.Label>
+                <Form.Label><Translate textKey="contactRequired" /></Form.Label>
                 <Form.Control
                   type="text"
                   name="contact"
@@ -105,7 +109,7 @@ const AddEmployee = () => {
               </Form.Group>
               
               <Form.Group className="mb-3">
-                <Form.Label>Email</Form.Label>
+                <Form.Label><Translate textKey="email" /></Form.Label>
                 <Form.Control
                   type="email"
                   name="email"
@@ -115,7 +119,7 @@ const AddEmployee = () => {
               </Form.Group>
               
               <Form.Group className="mb-3">
-                <Form.Label>Address</Form.Label>
+                <Form.Label><Translate textKey="address" /></Form.Label>
                 <Form.Control
                   as="textarea"
                   rows={3}
@@ -126,7 +130,7 @@ const AddEmployee = () => {
               </Form.Group>
               
               <Form.Group className="mb-3">
-                <Form.Label>Joining Date</Form.Label>
+                <Form.Label><Translate textKey="joiningDate" /></Form.Label>
                 <Form.Control
                   type="date"
                   name="joiningDate"
@@ -136,7 +140,7 @@ const AddEmployee = () => {
               </Form.Group>
               
               <Form.Group className="mb-3">
-                <Form.Label>Monthly Salary</Form.Label>
+                <Form.Label><Translate textKey="monthlySalary" /></Form.Label>
                 <Form.Control
                   type="number"
                   name="salary"
@@ -147,10 +151,10 @@ const AddEmployee = () => {
               
               <div className="d-flex justify-content-between">
                 <Button variant="secondary" onClick={() => navigate('/employees')}>
-                  Cancel
+                  <Translate textKey="cancel" />
                 </Button>
                 <Button variant="primary" type="submit" disabled={loading}>
-                  {loading ? 'Adding...' : 'Add Employee'}
+                  {loading ? <Translate textKey="adding" /> : <Translate textKey="addEmployee" />}
                 </Button>
               </div>
             </Form>
