@@ -28,6 +28,7 @@ export function AuthProvider({ children }) {
         // Store shop details in Firestore
         return setDoc(doc(db, 'shops', user.uid), {
           ...shopDetails,
+          userEmail: email,
           createdAt: new Date().toISOString()
         }).then(() => user);
       });
