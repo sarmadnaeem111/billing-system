@@ -35,6 +35,7 @@ const MainNavbar = () => {
                 <Nav.Link as={Link} to="/dashboard"><Translate textKey="dashboard" /></Nav.Link>
                 <Nav.Link as={Link} to="/new-receipt"><Translate textKey="newReceipt" /></Nav.Link>
                 <Nav.Link as={Link} to="/receipts"><Translate textKey="receipts" /></Nav.Link>
+                <Nav.Link as={Link} to="/sales-analytics"><Translate textKey="salesAnalytics" fallback="Sales Analytics" /></Nav.Link>
                 <Nav.Link as={Link} to="/stock"><Translate textKey="inventory" /></Nav.Link>
                 
                 {/* Employee Management Dropdown */}
