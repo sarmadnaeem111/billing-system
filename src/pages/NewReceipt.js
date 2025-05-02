@@ -276,7 +276,8 @@ const NewReceipt = () => {
       shopDetails: {
         name: shopData.shopName,
         address: shopData.address,
-        phone: shopData.phoneNumber
+        phone: shopData.phoneNumber,
+        logoUrl: shopData.logoUrl || ''
       },
       transactionId,
       cashierName: cashierName.trim(),
@@ -548,6 +549,15 @@ const NewReceipt = () => {
               <Card.Body ref={pdfRef} className="p-4">
                 <div className="receipt-preview">
                   <div className="text-center mb-4">
+                    {translatedShopData?.logoUrl && (
+                      <div className="mb-3" style={{ maxWidth: '150px', margin: '0 auto' }}>
+                        <img 
+                          src={translatedShopData.logoUrl} 
+                          alt={translatedShopData?.shopName || 'Shop Logo'} 
+                          style={{ maxWidth: '100%', maxHeight: '100px' }}
+                        />
+                      </div>
+                    )}
                     <h3>{translatedShopData?.shopName || 'Shop Name'}</h3>
                     <p className="mb-0">{translatedShopData?.address || 'Shop Address'}</p>
                     <p>
