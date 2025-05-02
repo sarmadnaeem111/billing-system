@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Stack } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Stack, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -7,6 +7,8 @@ import { useAuth } from '../contexts/AuthContext';
 import MainNavbar from '../components/Navbar';
 import { Translate, TranslateData } from '../utils';
 import useTranslatedData from '../hooks/useTranslatedData';
+import { formatCurrency } from '../utils/receiptUtils';
+import { getDailySalesAndProfit } from '../utils/salesUtils';
 
 const Dashboard = () => {
   const { currentUser, shopData } = useAuth();
@@ -14,7 +16,9 @@ const Dashboard = () => {
   const [recentReceipts, setRecentReceipts] = useState([]);
   const [employeeCount, setEmployeeCount] = useState(0);
   const [todayAttendance, setTodayAttendance] = useState({ present: 0, absent: 0, total: 0 });
+  const [todaySales, setTodaySales] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [salesLoading, setSalesLoading] = useState(true);
   const navigate = useNavigate();
 
   // Translate shop data
@@ -23,6 +27,26 @@ const Dashboard = () => {
   const translatedReceipts = useTranslatedData(recentReceipts);
   // Translate attendance data
   const translatedAttendance = useTranslatedData(todayAttendance);
+
+  // Fetch daily sales and profit data
+  useEffect(() => {
+    if (!currentUser) return;
+
+    setSalesLoading(true);
+    
+    // Adding error handling and more informative console messages
+    getDailySalesAndProfit(currentUser.uid)
+      .then(data => {
+        setTodaySales(data);
+      })
+      .catch(error => {
+        // Log error but don't show to user to avoid cluttering the UI
+        console.error("Error fetching daily sales data:", error.message || error);
+      })
+      .finally(() => {
+        setSalesLoading(false);
+      });
+  }, [currentUser]);
 
   useEffect(() => {
     // Convert to non-async function
@@ -134,6 +158,59 @@ const Dashboard = () => {
           </Card>
         )}
         
+        {/* Today's sales and profit summary */}
+        <Card className="mb-4 shadow-sm">
+          <Card.Body>
+            <Card.Title><Translate textKey="todaysSummary" fallback="Today's Summary" /></Card.Title>
+            <Row className="mt-3">
+              {salesLoading ? (
+                <Col xs={12} className="text-center py-3">
+                  <Spinner animation="border" size="sm" /> <Translate textKey="loadingSalesData" fallback="Loading sales data..." />
+                </Col>
+              ) : todaySales ? (
+                <>
+                  <Col xs={6} md={3} className="text-center mb-3">
+                    <h5><Translate textKey="sales" fallback="Sales" /></h5>
+                    <h3>{formatCurrency(todaySales.sales)}</h3>
+                  </Col>
+                  <Col xs={6} md={3} className="text-center mb-3">
+                    <h5><Translate textKey="profit" fallback="Profit" /></h5>
+                    <h3>{formatCurrency(todaySales.profit)}</h3>
+                  </Col>
+                  <Col xs={6} md={3} className="text-center mb-3">
+                    <h5><Translate textKey="transactions" fallback="Transactions" /></h5>
+                    <h3>{todaySales.transactionCount}</h3>
+                  </Col>
+                  <Col xs={6} md={3} className="text-center mb-3">
+                    <h5><Translate textKey="profitMargin" fallback="Profit Margin" /></h5>
+                    <h3>
+                      {todaySales.sales > 0 
+                        ? `${((todaySales.profit / todaySales.sales) * 100).toFixed(2)}%` 
+                        : '0%'}
+                    </h3>
+                    <small className="text-muted">
+                      {formatCurrency(todaySales.profit)} / {formatCurrency(todaySales.sales)}
+                    </small>
+                  </Col>
+                </>
+              ) : (
+                <Col xs={12} className="text-center py-3">
+                  <Translate textKey="noSalesDataToday" fallback="No sales data available for today." />
+                </Col>
+              )}
+            </Row>
+            <div className="text-center mt-2">
+              <Button 
+                variant="primary" 
+                onClick={() => navigate('/sales-analytics')}
+                size="sm"
+              >
+                <Translate textKey="viewDetailedAnalytics" fallback="View Detailed Analytics" />
+              </Button>
+            </div>
+          </Card.Body>
+        </Card>
+        
         <Row className="g-3">
           <Col xs={12} md={6} lg={4}>
             <Card className="h-100 shadow-sm">
@@ -229,6 +306,29 @@ const Dashboard = () => {
             </Card>
           </Col>
           
+          <Col xs={12} md={6} lg={4}>
+            <Card className="h-100 shadow-sm">
+              <Card.Body className="d-flex flex-column">
+                <Card.Title><Translate textKey="salesAndProfit" fallback="Sales & Profit" /></Card.Title>
+                <Card.Text className="mb-4">
+                  <Translate 
+                    textKey="salesAnalyticsDescription" 
+                    fallback="View detailed sales and profit analytics on daily, monthly and yearly basis."
+                  />
+                </Card.Text>
+                <div className="mt-auto">
+                  <Button 
+                    variant="primary" 
+                    onClick={() => navigate('/sales-analytics')}
+                    className="w-100"
+                  >
+                    <Translate textKey="viewAnalytics" fallback="View Analytics" />
+                  </Button>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+          
           <Col xs={12} lg={4}>
             <Card className="h-100 shadow-sm">
               <Card.Body>
@@ -291,4 +391,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;
