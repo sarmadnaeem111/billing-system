@@ -204,6 +204,15 @@ const ViewReceipt = () => {
             <Card.Body ref={pdfRef} className="p-4">
               <div className="receipt-container">
                 <div className="text-center mb-4">
+                  {receipt.shopDetails.logoUrl && (
+                    <div className="mb-3" style={{ maxWidth: '150px', margin: '0 auto' }}>
+                      <img 
+                        src={receipt.shopDetails.logoUrl} 
+                        alt={receipt.shopDetails.name} 
+                        style={{ maxWidth: '100%', maxHeight: '100px' }}
+                      />
+                    </div>
+                  )}
                   <h3>{receipt.shopDetails.name}</h3>
                   <p className="mb-0">{receipt.shopDetails.address}</p>
                   <p>Tel: {receipt.shopDetails.phone}</p>
