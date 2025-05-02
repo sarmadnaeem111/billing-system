@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Card, Form, Button, Row, Col, Alert, ListGroup } from 'react-bootstrap';
+import React, { useState, useEffect, useRef } from 'react';
+import { Container, Card, Form, Button, Row, Col, Alert, ListGroup, Image, Spinner } from 'react-bootstrap';
 import { useAuth } from '../contexts/AuthContext';
 import MainNavbar from '../components/Navbar';
 import { Translate, useTranslatedAttribute } from '../utils';
+import cloudinaryConfig from '../utils/cloudinaryConfig';
 
 const Settings = () => {
   const { shopData, updateShopData } = useAuth();
@@ -13,6 +14,8 @@ const Settings = () => {
   // Basic shop info
   const [shopName, setShopName] = useState('');
   const [address, setAddress] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   
   // Phone numbers
   const [phoneNumbers, setPhoneNumbers] = useState([]);
@@ -29,11 +32,15 @@ const Settings = () => {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   
+  // File input reference
+  const fileInputRef = useRef(null);
+  
   // Load shop data
   useEffect(() => {
     if (shopData) {
       setShopName(shopData.shopName || '');
       setAddress(shopData.address || '');
+      setLogoUrl(shopData.logoUrl || '');
       
       // Load phone numbers (convert from string if necessary)
       if (shopData.phoneNumbers && Array.isArray(shopData.phoneNumbers)) {
@@ -49,6 +56,63 @@ const Settings = () => {
       setManagerNames(shopData.managerNames || []);
     }
   }, [shopData]);
+  
+  // Handle logo upload to Cloudinary
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Check file type
+    if (!file.type.match('image.*')) {
+      setError('Please select an image file');
+      return;
+    }
+    
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image file should be less than 5MB');
+      return;
+    }
+    
+    setIsUploading(true);
+    setError('');
+    
+    try {
+      // Create form data for upload
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', cloudinaryConfig.upload_preset);
+      
+      // Upload to Cloudinary
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudinaryConfig.cloud_name}/image/upload`,
+        {
+          method: 'POST',
+          body: formData
+        }
+      );
+      
+      const data = await response.json();
+      
+      if (data.secure_url) {
+        setLogoUrl(data.secure_url);
+        setSuccess('Logo uploaded successfully');
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        throw new Error(data.error?.message || 'Failed to upload image');
+      }
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      setError('Failed to upload logo: ' + (error.message || 'Unknown error'));
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
+  // Handle removing the logo
+  const handleRemoveLogo = () => {
+    setLogoUrl('');
+  };
   
   // Handle adding a new phone number
   const handleAddPhoneNumber = () => {
@@ -137,6 +201,7 @@ const Settings = () => {
       phoneNumber: phoneNumbers[0] || '', // Keep the first phone as main for backward compatibility
       cashierNames: cashierNames,
       managerNames: managerNames,
+      logoUrl: logoUrl, // Include the logo URL in shop data
       updatedAt: new Date().toISOString()
     };
     
@@ -191,6 +256,56 @@ const Settings = () => {
                       placeholder={getTranslatedAttr("enterShopAddress")}
                     />
                   </Form.Group>
+                </Col>
+              </Row>
+              
+              {/* Shop Logo Upload Section */}
+              <h4 className="mb-3 mt-4"><Translate textKey="shopLogo" fallback="Shop Logo" /></h4>
+              <Row>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label><Translate textKey="uploadLogo" fallback="Upload Logo" /></Form.Label>
+                    <div className="d-flex mb-3">
+                      <Form.Control
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleLogoUpload}
+                        accept="image/*"
+                        className="me-2"
+                        disabled={isUploading}
+                      />
+                    </div>
+                    <Form.Text className="text-muted">
+                      <Translate textKey="logoUploadHelp" fallback="Upload a logo to display on receipts. Maximum size: 5MB." />
+                    </Form.Text>
+                  </Form.Group>
+                </Col>
+                <Col md={6} className="d-flex align-items-center justify-content-center">
+                  {isUploading ? (
+                    <div className="text-center">
+                      <Spinner animation="border" size="sm" className="me-2" />
+                      <span><Translate textKey="uploading" fallback="Uploading..." /></span>
+                    </div>
+                  ) : logoUrl ? (
+                    <div className="text-center">
+                      <div className="mb-2" style={{ maxWidth: '150px', margin: '0 auto' }}>
+                        <Image src={logoUrl} alt="Shop Logo" fluid className="mb-2" style={{ maxHeight: '150px' }} />
+                      </div>
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={handleRemoveLogo}
+                      >
+                        <Translate textKey="removeLogo" fallback="Remove Logo" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center text-muted">
+                      <div style={{ border: '2px dashed #ccc', padding: '2rem', borderRadius: '8px' }}>
+                        <Translate textKey="noLogoUploaded" fallback="No logo uploaded" />
+                      </div>
+                    </div>
+                  )}
                 </Col>
               </Row>
               
