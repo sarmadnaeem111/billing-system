@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Table, Card, Badge, Alert, Spinner, Button } from 'react-bootstrap';
 import { useAdmin } from '../contexts/AdminContext';
 import AdminNavbar from '../components/AdminNavbar';
+import { db, auth } from '../firebase/config';
+import { getDoc, doc } from 'firebase/firestore';
+import { getAuth, listUsers } from 'firebase/auth';
 
 // Simple mock data for direct use
 const MOCK_USERS = [
@@ -66,7 +69,7 @@ const AdminManageUsers = () => {
     }
   };
 
-  // Simple fetch users function
+  // Enhanced fetch users function to include email data
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
@@ -76,8 +79,26 @@ const AdminManageUsers = () => {
       const fetchedUsers = await getAllUsers();
       console.log("Fetched users from context:", fetchedUsers);
       
-      // Only fall back to mock data if there was an error fetching data, not just if array is empty
-      setUsers(fetchedUsers);
+      // Get user auth data with email
+      // Since we can't directly call Firebase Admin SDK from client,
+      // we need to ensure emails are stored in Firestore during registration
+      // For now, we'll use the current approach and enhance with user emails
+      
+      // Map the email from auth data if available, or use existing email field
+      const usersWithEmail = fetchedUsers.map(user => {
+        // If user already has email field, use it
+        if (user.email) {
+          return user;
+        }
+        
+        // Otherwise, check if we have email in auth object or set to "Email not available"
+        return {
+          ...user,
+          email: user.userEmail || "Email not available" // Add this fallback
+        };
+      });
+      
+      setUsers(usersWithEmail);
     } catch (error) {
       console.error("Error fetching users:", error);
       setError('Failed to load users. Using mock data instead.');
