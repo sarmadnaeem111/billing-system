@@ -131,6 +131,7 @@ export function AdminProvider({ children }) {
           console.log(`Processing document: ${doc.id}`, data);
           return {
             id: doc.id,
+            email: data.userEmail || data.email || 'No email available',
             ...data
           };
         })
@@ -213,6 +214,7 @@ export function AdminProvider({ children }) {
           console.log(`Processing document: ${doc.id}`, data);
           return {
             id: doc.id,
+            email: data.userEmail || data.email || 'No email available',
             ...data
           };
         })
