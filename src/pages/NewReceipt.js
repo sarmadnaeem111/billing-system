@@ -12,7 +12,7 @@ import { Translate, TranslateData, useTranslatedData } from '../utils';
 
 const NewReceipt = () => {
   const { currentUser, shopData } = useAuth();
-  const [items, setItems] = useState([{ name: '', price: '', quantity: '1' }]);
+  const [items, setItems] = useState([{ name: '', price: '', quantity: '1', costPrice: '0' }]);
   const [cashierName, setCashierName] = useState('');
   const [managerName, setManagerName] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('Cash');
@@ -72,11 +72,12 @@ const NewReceipt = () => {
           newItems[existingItemIndex].quantity = (currentQty + 1).toString();
           setItems(newItems);
         } else {
-          // Add as new item
+          // Add as new item with cost price
           setItems([...items, { 
             name: matchingItem.name, 
             price: matchingItem.price.toString(), 
-            quantity: '1' 
+            quantity: '1',
+            costPrice: matchingItem.costPrice ? matchingItem.costPrice.toString() : '0'
           }]);
         }
       } else {
@@ -114,13 +115,21 @@ const NewReceipt = () => {
     newItems[index][field] = value;
     
     // If the name field is changed and we have stock data,
-    // auto-populate the price from inventory if available
+    // auto-populate both price and costPrice from inventory if available
     if (field === 'name' && stockLoaded) {
       const matchingItem = stockItems.find(stockItem => 
         stockItem.name.toLowerCase() === value.toLowerCase());
       
       if (matchingItem) {
         newItems[index].price = matchingItem.price.toString();
+        // Store the cost price for profit calculation - ensure it's always stored
+        newItems[index].costPrice = matchingItem.costPrice ? matchingItem.costPrice.toString() : '0';
+        
+        // Log the matched item and cost price (only in development)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Found matching item:', matchingItem.name);
+          console.log('Price:', matchingItem.price, 'Cost Price:', matchingItem.costPrice);
+        }
       }
     }
     
@@ -129,7 +138,7 @@ const NewReceipt = () => {
 
   // Add a new item row
   const addItem = () => {
-    setItems([...items, { name: '', price: '', quantity: '1' }]);
+    setItems([...items, { name: '', price: '', quantity: '1', costPrice: '0' }]);
   };
 
   // Remove an item row
@@ -242,37 +251,55 @@ const NewReceipt = () => {
       return;
     }
     
+    // Fetch cost prices for all items if not already added
+    let processedItems = [...items];
+    if (stockLoaded) {
+      processedItems = items.map(item => {
+        if (!item.costPrice) {
+          const matchingItem = stockItems.find(stockItem => 
+            stockItem.name.toLowerCase() === item.name.toLowerCase());
+          
+          if (matchingItem && matchingItem.costPrice) {
+            return {
+              ...item,
+              costPrice: matchingItem.costPrice.toString()
+            };
+          }
+        }
+        return item;
+      });
+    }
+    
     // Create receipt data
     const receiptData = {
       shopId: currentUser.uid,
       shopDetails: {
         name: shopData.shopName,
         address: shopData.address,
-        phone: shopData.phoneNumbers ? shopData.phoneNumbers.join(', ') : shopData.phoneNumber
+        phone: shopData.phoneNumber
       },
-      cashierName,
-      managerName,
-      items,
-      paymentMethod,
       transactionId,
-      totalAmount: calculateTotal(items),
-      timestamp: new Date().toISOString()
+      cashierName: cashierName.trim(),
+      managerName: managerName.trim(),
+      items: processedItems,
+      totalAmount: calculateTotal(processedItems),
+      paymentMethod
     };
     
     // Save receipt to Firestore
     saveReceipt(receiptData)
-      .then(receiptId => {
-        // Update inventory quantities
-        return updateStockQuantity(currentUser.uid, items)
-          .then(() => receiptId);
-      })
-      .then(receiptId => {
+      .then((receiptId) => {
         setSavedReceiptId(receiptId);
-        setSuccess(<Translate textKey="receiptCreated" />);
+        setSuccess(<Translate textKey="receiptSaved" />);
+        
+        // Update inventory quantities
+        return updateStockQuantity(currentUser.uid, processedItems.map(item => ({
+          name: item.name,
+          quantity: parseInt(item.quantity)
+        })));
       })
       .catch(error => {
-        setError(<><Translate textKey="failedToCreateReceipt" />{error.message}</>);
-        console.error(error);
+        setError(<><Translate textKey="errorSavingReceipt" /> {error.message}</>);
       })
       .finally(() => {
         setLoading(false);
