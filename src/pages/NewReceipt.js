@@ -152,8 +152,28 @@ const NewReceipt = () => {
   // Function to generate and download PDF
   const downloadPdf = () => {
     const input = pdfRef.current;
-    html2canvas(input)
-      .then((canvas) => {
+    
+    // Make sure all images are loaded before converting to canvas
+    const images = input.querySelectorAll('img');
+    const imagesLoaded = Array.from(images).map(img => {
+      if (img.complete) {
+        return Promise.resolve();
+      } else {
+        return new Promise(resolve => {
+          img.onload = resolve;
+          img.onerror = resolve; // Continue even if image fails
+        });
+      }
+    });
+    
+    // Wait for all images to load then create PDF
+    Promise.all(imagesLoaded).then(() => {
+      html2canvas(input, {
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        scale: 2 // Higher quality
+      }).then((canvas) => {
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -167,6 +187,7 @@ const NewReceipt = () => {
         pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
         pdf.save(`receipt-${transactionId}.pdf`);
       });
+    });
   };
 
   // Check if items exist in inventory and have sufficient quantity
@@ -555,6 +576,13 @@ const NewReceipt = () => {
                           src={translatedShopData.logoUrl} 
                           alt={translatedShopData?.shopName || 'Shop Logo'} 
                           style={{ maxWidth: '100%', maxHeight: '100px' }}
+                          crossOrigin="anonymous"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            console.log('Logo failed to load');
+                            // Set a fallback or just hide the image
+                            e.target.style.display = 'none';
+                          }}
                         />
                       </div>
                     )}
