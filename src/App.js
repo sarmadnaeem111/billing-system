@@ -26,6 +26,7 @@ import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminPendingUsers from './pages/AdminPendingUsers';
 import AdminManageUsers from './pages/AdminManageUsers';
+import SalesAnalytics from './pages/SalesAnalytics';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 
@@ -59,6 +60,12 @@ function AppContent() {
           <Route path="/receipt/:id" element={
             <PrivateRoute>
               <ViewReceipt />
+            </PrivateRoute>
+          } />
+          {/* Sales Analytics Route */}
+          <Route path="/sales-analytics" element={
+            <PrivateRoute>
+              <SalesAnalytics />
             </PrivateRoute>
           } />
           {/* Stock Management Routes */}
