@@ -1,0 +1,42 @@
+.analytics-card {
+  transition: all 0.3s ease-in-out;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  overflow: hidden;
+}
+
+.analytics-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.analytics-card .display-6 {
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.profit-breakdown-card {
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.profit-breakdown-card .progress {
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.profit-breakdown-card .progress-bar {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+/* Responsive table styles */
+@media (max-width: 768px) {
+  .table-responsive {
+    font-size: 0.9rem;
+  }
+  
+  .analytics-card {
+    margin-bottom: 1rem;
+  }
+} 
