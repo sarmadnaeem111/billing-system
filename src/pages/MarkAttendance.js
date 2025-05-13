@@ -33,6 +33,30 @@ const MarkAttendance = () => {
   // Current date for marking attendance
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   
+  // Set viewport meta tag for better mobile experience
+  useEffect(() => {
+    // Check if viewport meta tag exists
+    let viewportMeta = document.querySelector('meta[name="viewport"]');
+    
+    // If it doesn't exist, create it
+    if (!viewportMeta) {
+      viewportMeta = document.createElement('meta');
+      viewportMeta.name = 'viewport';
+      document.head.appendChild(viewportMeta);
+    }
+    
+    // Set the viewport content for better mobile responsive design
+    viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+    
+    // Cleanup function
+    return () => {
+      // Reset to default viewport if needed
+      if (viewportMeta) {
+        viewportMeta.content = 'width=device-width, initial-scale=1.0';
+      }
+    };
+  }, []);
+  
   // Fetch employees
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -192,7 +216,7 @@ const MarkAttendance = () => {
   return (
     <>
       <MainNavbar />
-      <Container>
+      <Container className="attendance-container">
         <h2 className="mb-4"><Translate textKey="markAttendance" /></h2>
         
         {error && <Alert variant="danger">{error}</Alert>}
@@ -206,6 +230,7 @@ const MarkAttendance = () => {
                 type="date"
                 value={selectedDate}
                 onChange={(e) => handleDateChange(e.target.value)}
+                className="date-input"
               />
             </Form.Group>
           </Card.Body>
@@ -240,6 +265,7 @@ const MarkAttendance = () => {
                         <Form.Select
                           value={record.status}
                           onChange={(e) => handleStatusChange(index, e.target.value)}
+                          className="form-select-sm"
                         >
                           <option value="present"><Translate textKey="present" /></option>
                           <option value="absent"><Translate textKey="absent" /></option>
@@ -250,6 +276,7 @@ const MarkAttendance = () => {
                       <td data-label={getTranslatedAttr("checkIn")}>
                         <Form.Control
                           type="time"
+                          size="sm"
                           value={record.checkIn}
                           onChange={(e) => handleTimeChange(index, 'checkIn', e.target.value)}
                           disabled={record.status === 'absent' || record.status === 'leave'}
@@ -258,6 +285,7 @@ const MarkAttendance = () => {
                       <td data-label={getTranslatedAttr("checkOut")}>
                         <Form.Control
                           type="time"
+                          size="sm"
                           value={record.checkOut}
                           onChange={(e) => handleTimeChange(index, 'checkOut', e.target.value)}
                           disabled={record.status === 'absent' || record.status === 'leave'}
@@ -266,7 +294,8 @@ const MarkAttendance = () => {
                       <td data-label={getTranslatedAttr("notes")}>
                         <Form.Control
                           as="textarea"
-                          rows={2}
+                          rows={1}
+                          size="sm"
                           value={record.notes}
                           onChange={(e) => handleNotesChange(index, e.target.value)}
                           placeholder={getTranslatedAttr("optionalNotes")}
@@ -278,11 +307,11 @@ const MarkAttendance = () => {
               </Table>
             </div>
             
-            <div className="d-flex mt-4">
+            <div className="d-flex mt-4 attendance-actions">
               <Button 
                 variant="secondary" 
                 onClick={() => navigate('/attendance')}
-                className="me-2"
+                className="me-2 btn-cancel"
               >
                 <Translate textKey="cancel" />
               </Button>
@@ -290,6 +319,7 @@ const MarkAttendance = () => {
                 variant="primary" 
                 onClick={handleSubmit}
                 disabled={submitting}
+                className="btn-save"
               >
                 {submitting ? 
                   <Translate textKey="submitting" /> : 
