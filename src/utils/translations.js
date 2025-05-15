@@ -236,13 +236,12 @@ const translations = {
     unknownEmployee: "Unknown Employee",
 
     // Mark Attendance page
-    selectDate: "Select Date",
-    loadingEmployees: "Loading employees...",
-    submitting: "Submitting...",
-    submitAttendance: "Save Attendance",
-    optionalNotes: "Add notes",
-    attendanceMarkedSuccess: "Attendance marked successfully!",
-    failedToSubmitAttendance: "Failed to submit attendance. Please try again.",
+    selectDate: "تاریخ منتخب کریں",
+    submitting: "جمع کیا جا رہا ہے...",
+    submitAttendance: "حاضری محفوظ کریں",
+    optionalNotes: "نوٹس شامل کریں",
+    attendanceMarkedSuccess: "حاضری کامیابی سے درج کر دی گئی!",
+    failedToSubmitAttendance: "حاضری جمع کرانے میں ناکامی۔ براہ کرم دوبارہ کوشش کریں۔",
 
     // Sales and Profit Analytics
     salesAnalytics: "Sales Analytics",
@@ -430,15 +429,6 @@ const translations = {
     loadingReceipts: "رسیدیں لوڈ ہو رہی ہیں...",
     noReceiptsMatch: "آپ کے تلاش کے معیار سے کوئی رسید مطابقت نہیں رکھتی۔",
     noReceiptsFound: "کوئی رسیدیں نہیں ملیں۔ نئی رسید بنا کر شروع کریں۔",
-    date: "تاریخ",
-    transactionId: "ٹرانزیکشن آئی ڈی",
-    cashier: "کیشیئر",
-    items: "آئٹمز",
-    totalAmount: "کل رقم",
-    payment: "ادائیگی",
-    action: "عمل",
-    createNewReceipt: "نئی رسید بنائیں",
-    view: "دیکھیں",
 
     // Stock inventory page
     addNewItem: "نیا آئٹم شامل کریں",
@@ -501,7 +491,6 @@ const translations = {
     saving: "محفوظ کیا جا رہا ہے...",
 
     // Attendance page
-    attendanceRecords: "حاضری ریکارڈز",
     employee: "ملازم",
     checkIn: "چیک اِن",
     checkOut: "چیک آؤٹ",
@@ -517,7 +506,6 @@ const translations = {
 
     // Mark Attendance page
     selectDate: "تاریخ منتخب کریں",
-    loadingEmployees: "ملازمین لوڈ ہو رہے ہیں...",
     submitting: "جمع کیا جا رہا ہے...",
     submitAttendance: "حاضری محفوظ کریں",
     optionalNotes: "نوٹس شامل کریں",
