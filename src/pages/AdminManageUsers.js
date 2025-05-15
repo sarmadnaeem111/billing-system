@@ -2,9 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Table, Card, Badge, Alert, Spinner, Button } from 'react-bootstrap';
 import { useAdmin } from '../contexts/AdminContext';
 import AdminNavbar from '../components/AdminNavbar';
-import { db, auth } from '../firebase/config';
-import { getDoc, doc } from 'firebase/firestore';
-import { getAuth, listUsers } from 'firebase/auth';
 
 // Simple mock data for direct use
 const MOCK_USERS = [
