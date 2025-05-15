@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Navbar, Nav, Container, Button, Offcanvas } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAdmin } from '../contexts/AdminContext';
-import { useLanguage } from '../contexts/LanguageContext';
 import LanguageToggle from './LanguageToggle';
 import Translate from './Translate';
 
