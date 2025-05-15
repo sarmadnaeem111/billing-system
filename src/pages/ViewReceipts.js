@@ -7,7 +7,7 @@ import { formatCurrency, formatDate } from '../utils/receiptUtils';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import './ViewReceipts.css'; // Import the custom CSS
-import { Translate, TranslateData, useTranslatedData, useTranslatedAttribute } from '../utils';
+import { Translate, useTranslatedData, useTranslatedAttribute } from '../utils';
 
 const ViewReceipts = () => {
   const { currentUser } = useAuth();
