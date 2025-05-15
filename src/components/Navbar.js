@@ -8,7 +8,7 @@ import Translate from './Translate';
 
 const MainNavbar = () => {
   const { currentUser, logout, shopData } = useAuth();
-  const { language } = useLanguage();
+  const { } = useLanguage();
   const navigate = useNavigate();
 
   const handleLogout = () => {
