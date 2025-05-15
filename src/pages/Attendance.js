@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Table, Button, Form, Row, Col, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import MainNavbar from '../components/Navbar';
@@ -18,7 +18,7 @@ const Attendance = () => {
   const [attendance, setAttendance] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const setError = useState('')[1]; // Only use the setter function
   
   // Filters
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
