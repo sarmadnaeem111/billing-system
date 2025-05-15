@@ -11,8 +11,7 @@ import {
   collection, 
   query, 
   where, 
-  updateDoc,
-  orderBy
+  updateDoc
 } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
 
